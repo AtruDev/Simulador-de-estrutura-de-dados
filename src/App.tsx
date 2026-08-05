@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LinkedListSimulator } from './components/linked-list/LinkedListSimulator';
 import { QueueSimulator } from './components/queue/QueueSimulator';
 import { StackSimulator } from './components/stack/StackSimulator';
 
@@ -11,6 +12,7 @@ interface StructureTab {
 const TABS: readonly StructureTab[] = [
   { id: 'pilha', label: 'Pilha', render: () => <StackSimulator /> },
   { id: 'fila', label: 'Fila', render: () => <QueueSimulator /> },
+  { id: 'lista-ligada', label: 'Lista Ligada', render: () => <LinkedListSimulator /> },
 ];
 
 export default function App() {

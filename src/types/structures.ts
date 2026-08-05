@@ -7,6 +7,7 @@
  * Assim a lógica pura permanece livre de conceitos de animação.
  */
 
+import type { LinkedListState, ListNode } from '../core/data-structures/linked-list';
 import type { QueueItem, QueueState } from '../core/data-structures/queue';
 import type { StackItem, StackState } from '../core/data-structures/stack';
 import type { EmphasisRole, OperationTrace, Step } from './step';
@@ -66,3 +67,35 @@ export type QueueHighlight =
 
 export type QueueStep = Step<QueueSnapshot, QueueHighlight>;
 export type QueueTrace = OperationTrace<QueueSnapshot, QueueHighlight>;
+
+// ---------------------------------------------------------------------------
+// Lista ligada
+// ---------------------------------------------------------------------------
+
+export interface ListSnapshot {
+  readonly state: LinkedListState;
+  /** Nó recém-criado, ainda fora da lista, ou nó já desligado dela. */
+  readonly floating: FloatingItem<ListNode> | null;
+}
+
+export type ListHighlight =
+  /** Um nó da lista, identificado pelo seu id. */
+  | { readonly kind: 'node'; readonly id: string; readonly role: EmphasisRole }
+  /** O nó em trânsito, desenhado fora da estrutura. */
+  | { readonly kind: 'floating'; readonly role: EmphasisRole }
+  /** A seta que sai de um nó — o ponteiro `next` ou `prev`. */
+  | {
+      readonly kind: 'link';
+      readonly from: string;
+      readonly direction: 'next' | 'prev';
+      readonly role: EmphasisRole;
+    }
+  /** O rótulo de cabeça ou de cauda. */
+  | {
+      readonly kind: 'pointer';
+      readonly pointer: 'head' | 'tail';
+      readonly role: EmphasisRole;
+    };
+
+export type ListStep = Step<ListSnapshot, ListHighlight>;
+export type ListTrace = OperationTrace<ListSnapshot, ListHighlight>;

@@ -67,7 +67,14 @@ export interface Step<TSnapshot, THighlight> {
   readonly tone: StepTone;
 }
 
-/** Resultado global de uma operação. */
+/**
+ * Resultado global de uma operação.
+ *
+ * `'error'` significa "a operação não produziu o resultado pretendido" — o que
+ * inclui tanto as impossíveis (pop numa pilha vazia) quanto as que se
+ * concluíram sem sucesso (uma busca que não encontrou o valor). Serve para a
+ * interface destacar esses casos; nenhum deles lança exceção.
+ */
 export type OperationOutcome = 'success' | 'error';
 
 /**

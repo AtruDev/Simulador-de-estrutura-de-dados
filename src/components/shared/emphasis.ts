@@ -42,8 +42,21 @@ export const EMPHASIS: Record<EmphasisRole, EmphasisStyle> = {
   },
 };
 
+/** Cor das setas de ponteiro (`next`/`prev`) conforme o papel de destaque. */
+export const EMPHASIS_ARROW: Record<EmphasisRole, string> = {
+  entering: 'text-emerald-600',
+  leaving: 'text-rose-600',
+  inspected: 'text-amber-600',
+  found: 'text-emerald-700',
+  target: 'text-violet-600',
+  anchor: 'text-indigo-600',
+};
+
 /** Estilo neutro de um elemento sem destaque no passo atual. */
 export const NEUTRAL_BOX = 'border-slate-300 bg-white text-slate-800';
+
+/** Cor neutra das setas de ponteiro. */
+export const NEUTRAL_ARROW = 'text-slate-400';
 
 /** Estilo de uma posição vazia do array. */
 export const EMPTY_SLOT_BOX = 'border-dashed border-slate-300 bg-slate-50 text-slate-400';
