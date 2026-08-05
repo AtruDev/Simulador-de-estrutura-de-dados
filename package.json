@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Simulador web de estruturas de dados para a disciplina de Algoritmos e Estruturas de Dados",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
