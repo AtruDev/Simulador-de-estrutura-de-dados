@@ -1,0 +1,42 @@
+/**
+ * Modelos de *snapshot* e de *destaque* por estrutura.
+ *
+ * Um snapshot é o que a visualização desenha num passo. Ele compõe o estado
+ * puro da estrutura de dados com informação **transitória de apresentação** —
+ * por exemplo, o elemento que ainda está "fora" da pilha durante um `push`.
+ * Assim a lógica pura permanece livre de conceitos de animação.
+ */
+
+import type { StackItem, StackState } from '../core/data-structures/stack';
+import type { EmphasisRole, OperationTrace, Step } from './step';
+
+/** Elemento em trânsito: chegando à estrutura ou saindo dela. */
+export interface FloatingItem {
+  readonly item: StackItem;
+  readonly phase: 'entering' | 'leaving';
+}
+
+// ---------------------------------------------------------------------------
+// Pilha
+// ---------------------------------------------------------------------------
+
+export interface StackSnapshot {
+  readonly state: StackState;
+  /** Elemento fora da pilha durante a animação, ou `null`. */
+  readonly floating: FloatingItem | null;
+}
+
+export type StackHighlight =
+  /** Uma posição do array, contada a partir da base (índice 0). */
+  | { readonly kind: 'slot'; readonly index: number; readonly role: EmphasisRole }
+  /** O elemento em trânsito, desenhado fora da estrutura. */
+  | { readonly kind: 'floating'; readonly role: EmphasisRole }
+  /** O marcador de topo ou de base. */
+  | {
+      readonly kind: 'pointer';
+      readonly pointer: 'top' | 'base';
+      readonly role: EmphasisRole;
+    };
+
+export type StackStep = Step<StackSnapshot, StackHighlight>;
+export type StackTrace = OperationTrace<StackSnapshot, StackHighlight>;
