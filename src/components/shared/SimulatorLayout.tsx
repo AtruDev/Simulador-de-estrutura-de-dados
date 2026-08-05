@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { EmphasisLegend } from './EmphasisLegend';
 
 interface SimulatorLayoutProps {
   readonly title: string;
@@ -36,6 +37,8 @@ export function SimulatorLayout({
         {controls}
 
         <div className="painel min-h-[26rem] p-6">{canvas}</div>
+
+        <EmphasisLegend />
 
         {playback}
       </div>
