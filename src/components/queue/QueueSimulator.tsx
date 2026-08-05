@@ -1,36 +1,37 @@
 import { useMemo } from 'react';
 import {
-  STACK_DEFAULT_CAPACITY,
-  type StackState,
-  createStack,
+  QUEUE_DEFAULT_CAPACITY,
+  type QueueState,
+  capacity,
+  createQueue,
   isEmpty,
   isFull,
   size,
-} from '../../core/data-structures/stack';
+} from '../../core/data-structures/queue';
 import { nextId } from '../../core/ids';
 import {
+  planDequeue,
+  planEnqueue,
   planIsEmpty,
   planIsFull,
   planPeek,
-  planPop,
-  planPush,
-} from '../../core/step-engine/stack-steps';
+} from '../../core/step-engine/queue-steps';
 import { usePlayerShortcuts } from '../../hooks/usePlayerShortcuts';
 import { useSimulator } from '../../hooks/useSimulator';
 import { useStepPlayer } from '../../hooks/useStepPlayer';
-import type { StackHighlight, StackSnapshot } from '../../types/structures';
+import type { QueueHighlight, QueueSnapshot } from '../../types/structures';
 import { DefaultHelp, SimulatorScaffold } from '../shared/SimulatorScaffold';
 import { type Notice, StatusBanner } from '../shared/controls';
-import { StackControls } from './StackControls';
-import { StackView } from './StackView';
+import { QueueControls } from './QueueControls';
+import { QueueView } from './QueueView';
 
-/** Avisos sobre os estados de borda da pilha. */
-function buildNotices(state: StackState): readonly Notice[] {
+/** Avisos sobre os estados de borda da fila. */
+function buildNotices(state: QueueState): readonly Notice[] {
   if (isEmpty(state)) {
     return [
       {
         tone: 'error',
-        text: 'A pilha está vazia (topo = -1). pop() e peek() ficam indisponíveis — executá-los causaria underflow.',
+        text: 'A fila está vazia (total = 0). dequeue() e peek() ficam indisponíveis — executá-los causaria underflow.',
       },
     ];
   }
@@ -38,16 +39,16 @@ function buildNotices(state: StackState): readonly Notice[] {
     return [
       {
         tone: 'error',
-        text: `A pilha está cheia (${size(state)} de ${state.capacity}). push() fica indisponível — empilhar agora causaria overflow.`,
+        text: `A fila está cheia (${size(state)} de ${capacity(state)}). enqueue() fica indisponível — enfileirar agora causaria overflow.`,
       },
     ];
   }
   return [];
 }
 
-export function StackSimulator() {
-  const simulator = useSimulator<StackState, StackSnapshot, StackHighlight>(
-    createStack(STACK_DEFAULT_CAPACITY),
+export function QueueSimulator() {
+  const simulator = useSimulator<QueueState, QueueSnapshot, QueueHighlight>(
+    createQueue(QUEUE_DEFAULT_CAPACITY),
   );
   const { state, trace, sceneKey, log } = simulator;
 
@@ -56,8 +57,7 @@ export function StackSimulator() {
 
   const step = trace?.steps[Math.min(player.index, trace.steps.length - 1)] ?? null;
 
-  // Sem operação em cena, a visualização mostra o estado consolidado.
-  const snapshot: StackSnapshot = useMemo(
+  const snapshot: QueueSnapshot = useMemo(
     () => step?.snapshot ?? { state, floating: null },
     [step, state],
   );
@@ -66,23 +66,23 @@ export function StackSimulator() {
 
   return (
     <SimulatorScaffold
-      title="Pilha (Stack)"
-      subtitle="Estrutura LIFO baseada em array: o último elemento a entrar é o primeiro a sair."
+      title="Fila (Queue)"
+      subtitle="Estrutura FIFO baseada em array circular: o primeiro elemento a entrar é o primeiro a sair."
       player={player}
       trace={trace}
       step={step}
       log={log}
       onReplay={simulator.replay}
-      help={<DefaultHelp>Digite um valor e empilhe com push().</DefaultHelp>}
+      help={<DefaultHelp>Digite um valor e enfileire com enqueue().</DefaultHelp>}
       controls={
         <div className="flex flex-col gap-3">
-          <StackControls
+          <QueueControls
             state={state}
-            onPush={(valor) => {
-              simulator.run((atual) => planPush(atual, { id: nextId('item'), value: valor }));
+            onEnqueue={(valor) => {
+              simulator.run((atual) => planEnqueue(atual, { id: nextId('item'), value: valor }));
             }}
-            onPop={() => {
-              simulator.run(planPop);
+            onDequeue={() => {
+              simulator.run(planDequeue);
             }}
             onPeek={() => {
               simulator.run(planPeek);
@@ -93,18 +93,18 @@ export function StackSimulator() {
             onIsFull={() => {
               simulator.run(planIsFull);
             }}
-            onCapacityChange={(capacidade) => {
-              simulator.reset(createStack(capacidade));
+            onCapacityChange={(novaCapacidade) => {
+              simulator.reset(createQueue(novaCapacidade));
             }}
             onReset={() => {
-              simulator.reset(createStack(state.capacity));
+              simulator.reset(createQueue(capacity(state)));
             }}
           />
           <StatusBanner notices={notices} />
         </div>
       }
       canvas={
-        <StackView
+        <QueueView
           snapshot={snapshot}
           highlights={step?.highlights ?? []}
           durationMs={player.stepDurationMs}

@@ -7,12 +7,13 @@
  * Assim a lógica pura permanece livre de conceitos de animação.
  */
 
+import type { QueueItem, QueueState } from '../core/data-structures/queue';
 import type { StackItem, StackState } from '../core/data-structures/stack';
 import type { EmphasisRole, OperationTrace, Step } from './step';
 
 /** Elemento em trânsito: chegando à estrutura ou saindo dela. */
-export interface FloatingItem {
-  readonly item: StackItem;
+export interface FloatingItem<TItem> {
+  readonly item: TItem;
   readonly phase: 'entering' | 'leaving';
 }
 
@@ -23,7 +24,7 @@ export interface FloatingItem {
 export interface StackSnapshot {
   readonly state: StackState;
   /** Elemento fora da pilha durante a animação, ou `null`. */
-  readonly floating: FloatingItem | null;
+  readonly floating: FloatingItem<StackItem> | null;
 }
 
 export type StackHighlight =
@@ -40,3 +41,28 @@ export type StackHighlight =
 
 export type StackStep = Step<StackSnapshot, StackHighlight>;
 export type StackTrace = OperationTrace<StackSnapshot, StackHighlight>;
+
+// ---------------------------------------------------------------------------
+// Fila
+// ---------------------------------------------------------------------------
+
+export interface QueueSnapshot {
+  readonly state: QueueState;
+  /** Elemento fora da fila durante a animação, ou `null`. */
+  readonly floating: FloatingItem<QueueItem> | null;
+}
+
+export type QueueHighlight =
+  /** Uma posição física do array circular. */
+  | { readonly kind: 'slot'; readonly index: number; readonly role: EmphasisRole }
+  /** O elemento em trânsito, desenhado fora da estrutura. */
+  | { readonly kind: 'floating'; readonly role: EmphasisRole }
+  /** O ponteiro de início ou de fim. */
+  | {
+      readonly kind: 'pointer';
+      readonly pointer: 'front' | 'rear';
+      readonly role: EmphasisRole;
+    };
+
+export type QueueStep = Step<QueueSnapshot, QueueHighlight>;
+export type QueueTrace = OperationTrace<QueueSnapshot, QueueHighlight>;

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { QueueSimulator } from './components/queue/QueueSimulator';
 import { StackSimulator } from './components/stack/StackSimulator';
 
 interface StructureTab {
@@ -9,6 +10,7 @@ interface StructureTab {
 
 const TABS: readonly StructureTab[] = [
   { id: 'pilha', label: 'Pilha', render: () => <StackSimulator /> },
+  { id: 'fila', label: 'Fila', render: () => <QueueSimulator /> },
 ];
 
 export default function App() {
