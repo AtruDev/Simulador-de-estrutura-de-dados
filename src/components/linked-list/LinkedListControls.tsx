@@ -4,11 +4,13 @@ import {
   type ListVariant,
   isEmpty,
 } from '../../core/data-structures/linked-list';
+import { randomValue } from '../../core/sample-data';
 import {
   ControlDivider,
   ControlPanel,
   IndexInput,
   OperationButton,
+  SetupButton,
   ValueInput,
 } from '../shared/controls';
 
@@ -28,6 +30,8 @@ interface LinkedListControlsProps {
   readonly onDeleteAt: (index: number) => void;
   readonly onSearch: (value: string) => void;
   readonly onVariantChange: (variant: ListVariant) => void;
+  /** Povoa a lista com nós aleatórios, para montar o cenário da explicação. */
+  readonly onFill: () => void;
   readonly onReset: () => void;
 }
 
@@ -46,6 +50,7 @@ export function LinkedListControls({
   onDeleteAt,
   onSearch,
   onVariantChange,
+  onFill,
   onReset,
 }: LinkedListControlsProps) {
   const [valor, setValor] = useState('');
@@ -82,6 +87,9 @@ export function LinkedListControls({
           onChange={setValor}
           onSubmit={() => {
             inserir(onInsertTail);
+          }}
+          onRandom={() => {
+            setValor(randomValue());
           }}
         />
 
@@ -211,6 +219,13 @@ export function LinkedListControls({
             ))}
           </div>
         </fieldset>
+
+        <SetupButton
+          onClick={onFill}
+          hint="monta uma lista com nós aleatórios, reiniciando a atual"
+        >
+          Preencher
+        </SetupButton>
 
         <button
           type="button"

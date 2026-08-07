@@ -5,10 +5,12 @@ import {
   isEmpty,
   isFull,
 } from '../../core/data-structures/stack';
+import { randomValue } from '../../core/sample-data';
 import {
   ControlDivider,
   ControlPanel,
   OperationButton,
+  SetupButton,
   ValueInput,
 } from '../shared/controls';
 
@@ -20,6 +22,8 @@ interface StackControlsProps {
   readonly onIsEmpty: () => void;
   readonly onIsFull: () => void;
   readonly onCapacityChange: (capacity: number) => void;
+  /** Povoa a pilha com valores aleatórios, para montar o cenário da explicação. */
+  readonly onFill: () => void;
   readonly onReset: () => void;
 }
 
@@ -34,6 +38,7 @@ export function StackControls({
   onIsEmpty,
   onIsFull,
   onCapacityChange,
+  onFill,
   onReset,
 }: StackControlsProps) {
   const [valor, setValor] = useState('');
@@ -59,6 +64,9 @@ export function StackControls({
         value={valor}
         onChange={setValor}
         onSubmit={empilhar}
+        onRandom={() => {
+          setValor(randomValue());
+        }}
       />
 
       <OperationButton
@@ -124,6 +132,10 @@ export function StackControls({
           ))}
         </select>
       </div>
+
+      <SetupButton onClick={onFill} hint="monta uma pilha com valores aleatórios, reiniciando a atual">
+        Preencher
+      </SetupButton>
 
       <button
         type="button"

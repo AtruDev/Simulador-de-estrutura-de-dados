@@ -8,6 +8,7 @@ import {
   size,
 } from '../../core/data-structures/stack';
 import { nextId } from '../../core/ids';
+import { randomStack } from '../../core/sample-data';
 import {
   planIsEmpty,
   planIsFull,
@@ -73,7 +74,12 @@ export function StackSimulator() {
       step={step}
       log={log}
       onReplay={simulator.replay}
-      help={<DefaultHelp>Digite um valor e empilhe com push().</DefaultHelp>}
+      help={
+        <DefaultHelp>
+          Digite um valor e empilhe com push() — ou use <strong>Preencher</strong> para
+          partir de uma pilha já povoada.
+        </DefaultHelp>
+      }
       controls={
         <div className="flex flex-col gap-3">
           <StackControls
@@ -95,6 +101,11 @@ export function StackSimulator() {
             }}
             onCapacityChange={(capacidade) => {
               simulator.reset(createStack(capacidade));
+            }}
+            onFill={() => {
+              // Preparação de cenário, não operação: entra como novo ponto de
+              // partida, sem trilha para reproduzir e com o log zerado.
+              simulator.reset(randomStack(state.capacity, () => nextId('item')));
             }}
             onReset={() => {
               simulator.reset(createStack(state.capacity));

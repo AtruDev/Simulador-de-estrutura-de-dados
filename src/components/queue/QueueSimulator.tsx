@@ -9,6 +9,7 @@ import {
   size,
 } from '../../core/data-structures/queue';
 import { nextId } from '../../core/ids';
+import { randomQueue } from '../../core/sample-data';
 import {
   planDequeue,
   planEnqueue,
@@ -73,7 +74,12 @@ export function QueueSimulator() {
       step={step}
       log={log}
       onReplay={simulator.replay}
-      help={<DefaultHelp>Digite um valor e enfileire com enqueue().</DefaultHelp>}
+      help={
+        <DefaultHelp>
+          Digite um valor e enfileire com enqueue() — ou use <strong>Preencher</strong> para
+          partir de uma fila já povoada.
+        </DefaultHelp>
+      }
       controls={
         <div className="flex flex-col gap-3">
           <QueueControls
@@ -95,6 +101,11 @@ export function QueueSimulator() {
             }}
             onCapacityChange={(novaCapacidade) => {
               simulator.reset(createQueue(novaCapacidade));
+            }}
+            onFill={() => {
+              // Preparação de cenário, não operação: entra como novo ponto de
+              // partida, sem trilha para reproduzir e com o log zerado.
+              simulator.reset(randomQueue(capacity(state), () => nextId('item')));
             }}
             onReset={() => {
               simulator.reset(createQueue(capacity(state)));

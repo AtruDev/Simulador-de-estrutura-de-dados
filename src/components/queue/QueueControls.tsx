@@ -6,7 +6,14 @@ import {
   isEmpty,
   isFull,
 } from '../../core/data-structures/queue';
-import { ControlDivider, ControlPanel, OperationButton, ValueInput } from '../shared/controls';
+import { randomValue } from '../../core/sample-data';
+import {
+  ControlDivider,
+  ControlPanel,
+  OperationButton,
+  SetupButton,
+  ValueInput,
+} from '../shared/controls';
 
 interface QueueControlsProps {
   readonly state: QueueState;
@@ -16,6 +23,8 @@ interface QueueControlsProps {
   readonly onIsEmpty: () => void;
   readonly onIsFull: () => void;
   readonly onCapacityChange: (capacity: number) => void;
+  /** Povoa a fila com valores aleatórios, para montar o cenário da explicação. */
+  readonly onFill: () => void;
   readonly onReset: () => void;
 }
 
@@ -30,6 +39,7 @@ export function QueueControls({
   onIsEmpty,
   onIsFull,
   onCapacityChange,
+  onFill,
   onReset,
 }: QueueControlsProps) {
   const [valor, setValor] = useState('');
@@ -55,6 +65,9 @@ export function QueueControls({
         value={valor}
         onChange={setValor}
         onSubmit={enfileirar}
+        onRandom={() => {
+          setValor(randomValue());
+        }}
       />
 
       <OperationButton
@@ -120,6 +133,10 @@ export function QueueControls({
           ))}
         </select>
       </div>
+
+      <SetupButton onClick={onFill} hint="monta uma fila com valores aleatórios, reiniciando a atual">
+        Preencher
+      </SetupButton>
 
       <button
         type="button"

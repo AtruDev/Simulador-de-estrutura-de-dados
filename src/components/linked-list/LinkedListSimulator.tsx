@@ -6,6 +6,7 @@ import {
   isEmpty,
 } from '../../core/data-structures/linked-list';
 import { nextId } from '../../core/ids';
+import { SAMPLE_LIST_SIZE, randomList } from '../../core/sample-data';
 import {
   planDeleteAt,
   planDeleteHead,
@@ -86,8 +87,9 @@ export function LinkedListSimulator() {
       onReplay={simulator.replay}
       help={
         <DefaultHelp>
-          Digite um valor e insira na cabeça, na cauda ou numa posição. Use{' '}
-          <strong>search</strong> para ver o percurso nó a nó.
+          Digite um valor e insira na cabeça, na cauda ou numa posição — ou use{' '}
+          <strong>Preencher</strong> para partir de uma lista já povoada e ver o percurso
+          nó a nó com <strong>search</strong>.
         </DefaultHelp>
       }
       controls={
@@ -117,6 +119,15 @@ export function LinkedListSimulator() {
             }}
             onVariantChange={(variante: ListVariant) => {
               simulator.reset(emptyList(variante));
+            }}
+            onFill={() => {
+              // Preparação de cenário, não operação: entra como novo ponto de
+              // partida, sem trilha para reproduzir e com o log zerado.
+              simulator.reset(
+                randomList(state.variant, Math.min(SAMPLE_LIST_SIZE, LIMITE_VISUAL), () =>
+                  nextId('no'),
+                ),
+              );
             }}
             onReset={() => {
               simulator.reset(emptyList(state.variant));
