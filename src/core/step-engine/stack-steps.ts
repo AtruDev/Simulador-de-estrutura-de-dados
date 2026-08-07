@@ -169,6 +169,7 @@ export function planPush(state: StackState, item: StackItem): StackTrace {
     snapshot: still(result.state),
     highlights: [{ kind: 'slot', index: novoTopo, role: 'entering' }],
     codeLine: 4,
+    counts: { moves: 1 },
   });
 
   builder.add({
@@ -240,6 +241,7 @@ export function planPop(state: StackState): StackTrace {
     snapshot: still(state),
     highlights: [{ kind: 'slot', index: indiceRemovido, role: 'leaving' }],
     codeLine: 4,
+    counts: { visits: 1 },
   });
 
   builder.add({
@@ -248,6 +250,7 @@ export function planPop(state: StackState): StackTrace {
     snapshot: { state: result.state, floating: { item: removido, phase: 'leaving' } },
     highlights: [{ kind: 'floating', role: 'leaving' }],
     codeLine: 5,
+    counts: { moves: 1 },
   });
 
   const novoTopo = topIndex(result.state);
@@ -319,6 +322,7 @@ export function planPeek(state: StackState): StackTrace {
     highlights: [{ kind: 'slot', index: result.index, role: 'inspected' }],
     codeLine: 4,
     tone: 'success',
+    counts: { visits: 1 },
   });
 
   return builder.build({

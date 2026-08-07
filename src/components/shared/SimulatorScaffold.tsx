@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { StepPlayer } from '../../hooks/useStepPlayer';
 import type { LogEntry, OperationTrace, Step } from '../../types/step';
 import { ComplexityBadge } from './ComplexityBadge';
+import { CostPanel } from './CostPanel';
 import { OperationLog } from './OperationLog';
 import { PlaybackControls } from './PlaybackControls';
 import { PseudocodePanel } from './PseudocodePanel';
@@ -61,6 +62,7 @@ export function SimulatorScaffold<TSnapshot, THighlight>({
                 operation={trace.label}
               />
               <ComplexityBadge complexity={trace.complexity} operation={trace.label} />
+              <CostPanel current={step.counts} total={trace.totals} />
               <PseudocodePanel pseudocode={trace.pseudocode} activeLine={step.codeLine} />
             </>
           ) : (

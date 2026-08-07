@@ -14,8 +14,10 @@ import type {
   OperationTrace,
   Pseudocode,
   Step,
+  StepCounts,
   StepTone,
 } from '../../types/step';
+import { NO_COUNTS } from '../../types/step';
 
 /** Campos de um passo, com valores padrão para o que é opcional. */
 export interface StepDraft<TSnapshot, THighlight> {
@@ -25,6 +27,11 @@ export interface StepDraft<TSnapshot, THighlight> {
   readonly highlights?: readonly THighlight[];
   readonly codeLine?: number;
   readonly tone?: StepTone;
+  /**
+   * Trabalho realizado **neste passo**. O construtor acumula: o planejador
+   * declara o custo local, que é a informação que ele de fato tem.
+   */
+  readonly counts?: Partial<StepCounts>;
 }
 
 /** Metadados da operação, informados ao fechar a trilha. */
@@ -47,9 +54,19 @@ export function createTraceBuilder<TSnapshot, THighlight>(): TraceBuilder<
   THighlight
 > {
   const steps: Step<TSnapshot, THighlight>[] = [];
+  let acumulado: StepCounts = NO_COUNTS;
 
   return {
     add(draft) {
+      const delta = draft.counts;
+      if (delta !== undefined) {
+        acumulado = {
+          comparisons: acumulado.comparisons + (delta.comparisons ?? 0),
+          moves: acumulado.moves + (delta.moves ?? 0),
+          visits: acumulado.visits + (delta.visits ?? 0),
+        };
+      }
+
       steps.push({
         id: nextId('passo'),
         title: draft.title,
@@ -58,6 +75,7 @@ export function createTraceBuilder<TSnapshot, THighlight>(): TraceBuilder<
         highlights: draft.highlights ?? [],
         codeLine: draft.codeLine ?? null,
         tone: draft.tone ?? 'info',
+        counts: acumulado,
       });
     },
 
@@ -75,6 +93,7 @@ export function createTraceBuilder<TSnapshot, THighlight>(): TraceBuilder<
         outcome: draft.outcome,
         summary: draft.summary,
         pseudocode: draft.pseudocode,
+        totals: acumulado,
       };
     },
   };

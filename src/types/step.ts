@@ -40,6 +40,33 @@ export type EmphasisRole =
   /** Ponteiro ou marcador em foco (topo, início, fim, cabeça, cauda). */
   | 'anchor';
 
+/**
+ * Trabalho realizado, na moeda com que a análise de algoritmos mede custo.
+ *
+ * Decisão didática deliberada: **verificações de controle não são contadas**.
+ * Testar `isFull()` antes de um `push` é uma comparação para o processador, mas
+ * contá-la ensinaria o aluno a somar a coisa errada — a análise de algoritmos
+ * conta as operações *dominantes*, aquelas que crescem com o tamanho da
+ * entrada. Por isso `comparisons` registra apenas comparação entre valores
+ * (a de uma busca), e não os testes de borda da estrutura.
+ *
+ * É esse recorte que faz os números contarem a história certa: `push` custa uma
+ * movimentação e nenhuma comparação; `deleteTail()` numa lista simplesmente
+ * ligada custa n−1 visitas, e é por isso que ele é O(n) enquanto o mesmo
+ * `deleteTail()` na lista dupla é O(1).
+ */
+export interface StepCounts {
+  /** Comparações entre valores — o que uma busca faz a cada nó. */
+  readonly comparisons: number;
+  /** Escritas: gravar um valor numa posição ou religar um ponteiro. */
+  readonly moves: number;
+  /** Posições ou nós alcançados ao percorrer a estrutura. */
+  readonly visits: number;
+}
+
+/** Contagem zerada — ponto de partida de toda trilha. */
+export const NO_COUNTS: StepCounts = { comparisons: 0, moves: 0, visits: 0 };
+
 /** Pseudocódigo da operação, com linhas indexadas a partir de 0. */
 export interface Pseudocode {
   readonly title: string;
@@ -65,6 +92,12 @@ export interface Step<TSnapshot, THighlight> {
   /** Linha do pseudocódigo correspondente, ou `null` se não houver. */
   readonly codeLine: number | null;
   readonly tone: StepTone;
+  /**
+   * Trabalho **acumulado** do início da operação até o fim deste passo. Igual ao
+   * snapshot: cada passo carrega o total daquele instante, para que voltar um
+   * passo continue sendo uma indexação, sem recalcular nada.
+   */
+  readonly counts: StepCounts;
 }
 
 /**
@@ -95,6 +128,8 @@ export interface OperationTrace<TSnapshot, THighlight> {
   /** Frase-resumo que vai para o log de operações. */
   readonly summary: string;
   readonly pseudocode: Pseudocode;
+  /** Custo total da operação — o acumulado do último passo. */
+  readonly totals: StepCounts;
 }
 
 /** Entrada do log de operações da sessão. */

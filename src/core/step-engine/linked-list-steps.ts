@@ -253,6 +253,9 @@ function addWalkSteps({ builder, state, visited, codeLine, goal }: WalkOptions):
         ...(ultimo ? [] : ([{ kind: 'link', from: id, direction: 'next', role: 'inspected' }] as const)),
       ],
       codeLine,
+      // Cada parada do ponteiro auxiliar é uma visita. É a soma delas que
+      // explica por que chegar à posição i custa O(n) numa lista ligada.
+      counts: { visits: 1 },
     });
   });
 }
@@ -293,6 +296,7 @@ export function planInsertHead(state: LinkedListState, novo: NewNode): ListTrace
       { kind: 'link', from: node.id, direction: 'next', role: 'target' },
     ],
     codeLine: 2,
+    counts: { moves: 1 },
   });
 
   if (duplamente && !listaVazia && cabecaAntiga !== null) {
@@ -305,6 +309,7 @@ export function planInsertHead(state: LinkedListState, novo: NewNode): ListTrace
         { kind: 'link', from: cabecaAntiga, direction: 'prev', role: 'target' },
       ],
       codeLine: 3,
+      counts: { moves: 1 },
     });
   }
 
@@ -323,6 +328,7 @@ export function planInsertHead(state: LinkedListState, novo: NewNode): ListTrace
     ],
     codeLine: duplamente ? 4 : 3,
     tone: 'success',
+    counts: { moves: listaVazia ? 2 : 1 },
   });
 
   return builder.build({
@@ -369,6 +375,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
       ],
       codeLine: 3,
       tone: 'success',
+      counts: { moves: 2 },
     });
 
     return builder.build({
@@ -394,6 +401,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
       { kind: 'node', id: node.id, role: 'entering' },
     ],
     codeLine: 4,
+    counts: { moves: 1 },
   });
 
   if (duplamente && caudaAntiga !== null) {
@@ -406,6 +414,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
         { kind: 'link', from: node.id, direction: 'prev', role: 'target' },
       ],
       codeLine: 5,
+      counts: { moves: 1 },
     });
   }
 
@@ -419,6 +428,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
     ],
     codeLine: duplamente ? 6 : 5,
     tone: 'success',
+    counts: { moves: 1 },
   });
 
   return builder.build({
@@ -509,6 +519,7 @@ export function planInsertAt(
       { kind: 'link', from: node.id, direction: 'next', role: 'target' },
     ],
     codeLine: 6,
+    counts: { moves: 1 },
   });
 
   if (duplamente) {
@@ -523,6 +534,7 @@ export function planInsertAt(
           : []),
       ],
       codeLine: 7,
+      counts: { moves: seguinteId !== null ? 2 : 1 },
     });
   }
 
@@ -541,6 +553,7 @@ export function planInsertAt(
     ],
     codeLine: duplamente ? 8 : 7,
     tone: 'success',
+    counts: { moves: 1 },
   });
 
   return builder.build({
@@ -602,6 +615,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
     snapshot: still(state),
     highlights: [{ kind: 'node', id: removido.id, role: 'leaving' }],
     codeLine: 2,
+    counts: { visits: 1 },
   });
 
   builder.add({
@@ -616,6 +630,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
       { kind: 'floating', role: 'leaving' },
     ],
     codeLine: 3,
+    counts: { moves: novaCabeca === null ? 2 : 1 },
   });
 
   if (duplamente && novaCabeca !== null) {
@@ -628,6 +643,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
         { kind: 'link', from: novaCabeca, direction: 'prev', role: 'target' },
       ],
       codeLine: 4,
+      counts: { moves: 1 },
     });
   }
 
@@ -703,6 +719,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
     snapshot: still(state),
     highlights: [{ kind: 'node', id: removido.id, role: 'leaving' }],
     codeLine: 2,
+    counts: { visits: 1 },
   });
 
   if (unicoNo) {
@@ -717,6 +734,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
       ],
       codeLine: duplamente ? 4 : 5,
       tone: 'success',
+      counts: { moves: 2 },
     });
 
     return builder.build({
@@ -744,6 +762,9 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
           : []),
       ],
       codeLine: 3,
+      // Uma única visita, contra as n−1 do percurso da lista simples: é o
+      // contraste que o contador torna visível.
+      counts: { visits: 1 },
     });
   } else {
     addWalkSteps({
@@ -766,6 +787,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
       { kind: 'floating', role: 'leaving' },
     ],
     codeLine: duplamente ? 4 : 5,
+    counts: { moves: 1 },
   });
 
   builder.add({
@@ -780,6 +802,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
     ],
     codeLine: 5,
     tone: 'success',
+    counts: { moves: 1 },
   });
 
   return builder.build({
@@ -864,6 +887,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
     snapshot: still(state),
     highlights: [{ kind: 'node', id: removido.id, role: 'leaving' }],
     codeLine: 5,
+    counts: { visits: 1 },
   });
 
   builder.add({
@@ -877,6 +901,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
       { kind: 'floating', role: 'leaving' },
     ],
     codeLine: 6,
+    counts: { moves: 1 },
   });
 
   if (duplamente && seguinteId !== null) {
@@ -889,6 +914,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
         { kind: 'link', from: seguinteId, direction: 'prev', role: 'target' },
       ],
       codeLine: 7,
+      counts: { moves: 1 },
     });
   }
 
@@ -973,6 +999,10 @@ export function planSearch(state: LinkedListState, value: string): ListTrace {
           ? []
           : ([{ kind: 'link', from: id, direction: 'next', role: 'inspected' }] as const)),
       ],
+      // Cada nó do percurso custa uma visita e uma comparação de valor — é a
+      // única operação do simulador que compara chaves, e a soma é exatamente
+      // o n da complexidade O(n).
+      counts: { visits: 1, comparisons: 1 },
       codeLine: encontrado ? 3 : 4,
       tone: encontrado ? 'success' : 'info',
     });

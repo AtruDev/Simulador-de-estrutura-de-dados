@@ -178,6 +178,7 @@ export function planEnqueue(state: QueueState, item: QueueItem): QueueTrace {
     snapshot: still(result.state),
     highlights: [{ kind: 'slot', index: result.index, role: 'entering' }],
     codeLine: 4,
+    counts: { moves: 1 },
   });
 
   builder.add({
@@ -248,6 +249,7 @@ export function planDequeue(state: QueueState): QueueTrace {
     snapshot: still(state),
     highlights: [{ kind: 'slot', index: result.index, role: 'leaving' }],
     codeLine: 4,
+    counts: { visits: 1 },
   });
 
   builder.add({
@@ -256,6 +258,7 @@ export function planDequeue(state: QueueState): QueueTrace {
     snapshot: { state: result.state, floating: { item: removido, phase: 'leaving' } },
     highlights: [{ kind: 'floating', role: 'leaving' }],
     codeLine: 5,
+    counts: { moves: 1 },
   });
 
   const proximo = isEmpty(result.state)
@@ -325,6 +328,7 @@ export function planPeek(state: QueueState): QueueTrace {
     highlights: [{ kind: 'slot', index: result.index, role: 'inspected' }],
     codeLine: 4,
     tone: 'success',
+    counts: { visits: 1 },
   });
 
   return builder.build({
