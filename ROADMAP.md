@@ -56,7 +56,7 @@ Colocar o simulador na mão dos alunos antes de aumentar o escopo.
 
 Nenhuma estrutura nova; tudo que vem depois depende desta fase.
 
-- Contadores de operação no modelo de passo (`Step`), exibidos junto da
+- [x] Contadores de operação no modelo de passo (`Step`), exibidos junto da
   complexidade e acumulados por operação.
 - Painel de curvas assintóticas, com a execução atual marcada sobre a curva.
 - Pilha e fila **encadeadas** (alocação dinâmica), completando as estruturas
