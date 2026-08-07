@@ -1,7 +1,10 @@
 import { useRef, useState } from 'react';
 import { LinkedListSimulator } from './components/linked-list/LinkedListSimulator';
+import { LinkedQueueSimulator } from './components/queue/LinkedQueueSimulator';
 import { QueueSimulator } from './components/queue/QueueSimulator';
+import { LinkedStackSimulator } from './components/stack/LinkedStackSimulator';
 import { StackSimulator } from './components/stack/StackSimulator';
+import type { Implementation } from './components/shared/ImplementationSwitch';
 
 interface StructureTab {
   readonly id: string;
@@ -9,9 +12,39 @@ interface StructureTab {
   readonly render: () => React.ReactNode;
 }
 
+/**
+ * A aba é do **tipo abstrato**, não da implementação: pilha é pilha, tenha ela
+ * sido feita com vetor ou com ponteiros. A escolha da implementação vive dentro
+ * da aba, para que trocar entre as duas seja um gesto de comparação — que é
+ * exatamente o que a unidade de TAD da disciplina pede.
+ */
+function StackTab() {
+  const [implementacao, setImplementacao] = useState<Implementation>('array');
+  return implementacao === 'array' ? (
+    <StackSimulator implementation={implementacao} onImplementationChange={setImplementacao} />
+  ) : (
+    <LinkedStackSimulator
+      implementation={implementacao}
+      onImplementationChange={setImplementacao}
+    />
+  );
+}
+
+function QueueTab() {
+  const [implementacao, setImplementacao] = useState<Implementation>('array');
+  return implementacao === 'array' ? (
+    <QueueSimulator implementation={implementacao} onImplementationChange={setImplementacao} />
+  ) : (
+    <LinkedQueueSimulator
+      implementation={implementacao}
+      onImplementationChange={setImplementacao}
+    />
+  );
+}
+
 const TABS: readonly StructureTab[] = [
-  { id: 'pilha', label: 'Pilha', render: () => <StackSimulator /> },
-  { id: 'fila', label: 'Fila', render: () => <QueueSimulator /> },
+  { id: 'pilha', label: 'Pilha', render: () => <StackTab /> },
+  { id: 'fila', label: 'Fila', render: () => <QueueTab /> },
   { id: 'lista-ligada', label: 'Lista Ligada', render: () => <LinkedListSimulator /> },
 ];
 

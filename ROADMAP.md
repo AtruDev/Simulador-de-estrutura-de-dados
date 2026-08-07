@@ -17,7 +17,7 @@ terreno da seguinte.
 | Complexidade algorítmica | Parcial — Big-O por operação; falta análise e curvas |
 | Paradigmas de projeto de algoritmos | Não iniciado |
 | Estruturas lineares — alocação sequencial (vetores) | **Pronto** — pilha e fila em array (fila circular) |
-| Estruturas lineares — alocação dinâmica (ponteiros) | **Parcial** — listas simples e dupla prontas; falta pilha e fila encadeadas |
+| Estruturas lineares — alocação dinâmica (ponteiros) | **Pronto** — listas simples e dupla, pilha e fila encadeadas |
 | Ordenação interna e externa | Não iniciado |
 | Pesquisa em memória primária | Não iniciado |
 | Pesquisa em memória secundária | Não iniciado |
@@ -59,8 +59,9 @@ Nenhuma estrutura nova; tudo que vem depois depende desta fase.
 - [x] Contadores de operação no modelo de passo (`Step`), exibidos junto da
   complexidade e acumulados por operação.
 - Painel de curvas assintóticas, com a execução atual marcada sobre a curva.
-- Pilha e fila **encadeadas** (alocação dinâmica), completando as estruturas
-  lineares da ementa.
+- [x] Pilha e fila **encadeadas** (alocação dinâmica), completando as estruturas
+  lineares da ementa. A escolha da implementação vive dentro da aba do TAD, para
+  que trocar entre vetor e ponteiros seja um gesto de comparação.
 - Painel **TAD × implementação** em cada estrutura: as operações do tipo abstrato
   de um lado, a implementação concreta do outro. Não vira módulo próprio — como
   tela isolada seria texto que ninguém lê.

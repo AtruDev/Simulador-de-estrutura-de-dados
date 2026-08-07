@@ -21,6 +21,7 @@ import { useSimulator } from '../../hooks/useSimulator';
 import { useStepPlayer } from '../../hooks/useStepPlayer';
 import type { StackHighlight, StackSnapshot } from '../../types/structures';
 import { DefaultHelp, SimulatorScaffold } from '../shared/SimulatorScaffold';
+import { type Implementation, ImplementationSwitch } from '../shared/ImplementationSwitch';
 import { type Notice, StatusBanner } from '../shared/controls';
 import { StackControls } from './StackControls';
 import { StackView } from './StackView';
@@ -46,7 +47,15 @@ function buildNotices(state: StackState): readonly Notice[] {
   return [];
 }
 
-export function StackSimulator() {
+interface StackSimulatorProps {
+  readonly implementation: Implementation;
+  readonly onImplementationChange: (value: Implementation) => void;
+}
+
+export function StackSimulator({
+  implementation,
+  onImplementationChange,
+}: StackSimulatorProps) {
   const simulator = useSimulator<StackState, StackSnapshot, StackHighlight>(
     createStack(STACK_DEFAULT_CAPACITY),
   );
@@ -82,6 +91,13 @@ export function StackSimulator() {
       }
       controls={
         <div className="flex flex-col gap-3">
+          <ImplementationSwitch
+            value={implementation}
+            onChange={onImplementationChange}
+            abstractType="pilha"
+            hint="Na versão em vetor a capacidade é fixa, o que torna o overflow possível e o isFull() significativo."
+          />
+
           <StackControls
             state={state}
             onPush={(valor) => {

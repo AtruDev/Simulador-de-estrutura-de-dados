@@ -6,10 +6,37 @@ import type { ListHighlight, ListSnapshot } from '../../types/structures';
 import { EMPHASIS, NEUTRAL_BOX, findRole } from '../shared/emphasis';
 import { NullBadge, PointerArrow } from './PointerArrow';
 
+/**
+ * Vocabulário dos ponteiros. A pilha e a fila encadeadas são listas ligadas por
+ * dentro, mas em aula chamam-se topo, início e fim — o desenho é o mesmo, os
+ * nomes é que mudam.
+ */
+export interface PointerNaming {
+  /** Rótulo do primeiro nó: `'cabeça'`, `'topo'` ou `'início'`. */
+  readonly head: string;
+  /** Rótulo do último nó, ou `null` para escondê-lo (a pilha não expõe o fundo). */
+  readonly tail: string | null;
+  /** Frase exibida quando a estrutura está vazia. */
+  readonly empty: string;
+  /** Descrição da estrutura para leitores de tela. */
+  readonly aria: string;
+}
+
 interface LinkedListViewProps {
   readonly snapshot: ListSnapshot;
   readonly highlights: readonly ListHighlight[];
   readonly durationMs: number;
+  readonly naming?: PointerNaming;
+}
+
+function defaultNaming(state: ListSnapshot['state']): PointerNaming {
+  const dupla = state.variant === 'doubly';
+  return {
+    head: 'cabeça',
+    tail: 'cauda',
+    empty: 'A lista está vazia: cabeça e cauda valem NULL.',
+    aria: `Lista ${dupla ? 'duplamente' : 'simplesmente'} ligada com ${state.size} nós, da cabeça à cauda`,
+  };
 }
 
 /** Dimensões dos nós, reduzidas em listas grandes. */
@@ -23,10 +50,16 @@ function nodeSize(total: number): { readonly box: string; readonly text: string 
  * Visualização da lista ligada: nós como caixas conectadas por setas de
  * ponteiro, com cabeça e cauda rotuladas e `NULL` visível nas extremidades.
  */
-export function LinkedListView({ snapshot, highlights, durationMs }: LinkedListViewProps) {
+export function LinkedListView({
+  snapshot,
+  highlights,
+  durationMs,
+  naming,
+}: LinkedListViewProps) {
   const { state, floating } = snapshot;
   const nodes = toNodes(state);
   const dupla = state.variant === 'doubly';
+  const nomes = naming ?? defaultNaming(state);
   const { box, text } = nodeSize(nodes.length);
   const duracao = durationMs / 1000;
   const vazia = isEmpty(state);
@@ -78,20 +111,18 @@ export function LinkedListView({ snapshot, highlights, durationMs }: LinkedListV
         <div className="flex flex-col items-center gap-3 py-6">
           <div className="flex items-center gap-3">
             <span className="rounded bg-indigo-100 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-indigo-800">
-              cabeça
+              {nomes.head}
             </span>
             <PointerArrow direction="next" role={papelCabeca} toNull />
             <NullBadge highlighted={papelCabeca !== null} />
           </div>
-          <p className="text-sm italic text-slate-400">
-            A lista está vazia: cabeça e cauda valem NULL.
-          </p>
+          <p className="text-sm italic text-slate-400">{nomes.empty}</p>
         </div>
       ) : (
         <div className="flex w-full flex-col items-center gap-2">
           <ol
             className="flex flex-wrap items-start justify-center gap-y-6"
-            aria-label={`Lista ${dupla ? 'duplamente' : 'simplesmente'} ligada com ${nodes.length} nós, da cabeça à cauda`}
+            aria-label={nomes.aria}
           >
             {/* NULL antes da cabeça — só existe na lista duplamente ligada. */}
             {dupla && (
@@ -123,10 +154,10 @@ export function LinkedListView({ snapshot, highlights, durationMs }: LinkedListV
                               : 'bg-indigo-100 text-indigo-800'
                           }`}
                         >
-                          cabeça
+                          {nomes.head}
                         </span>
                       )}
-                      {eCauda && (
+                      {eCauda && nomes.tail !== null && (
                         <span
                           className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
                             papelCauda !== null
@@ -134,7 +165,7 @@ export function LinkedListView({ snapshot, highlights, durationMs }: LinkedListV
                               : 'bg-violet-100 text-violet-800'
                           }`}
                         >
-                          cauda
+                          {nomes.tail}
                         </span>
                       )}
                     </span>
@@ -194,15 +225,19 @@ export function LinkedListView({ snapshot, highlights, durationMs }: LinkedListV
 
       {/* Estado da lista, em texto. */}
       <p className="font-mono text-sm text-slate-600">
-        cabeça ={' '}
+        {nomes.head} ={' '}
         <span className={`font-bold ${vazia ? 'text-rose-600' : 'text-indigo-700'}`}>
           {vazia ? 'NULL' : (nodes[0]?.value ?? 'NULL')}
         </span>
-        <span className="mx-2 text-slate-300">|</span>
-        cauda ={' '}
-        <span className={`font-bold ${vazia ? 'text-rose-600' : 'text-violet-700'}`}>
-          {vazia ? 'NULL' : (nodes[nodes.length - 1]?.value ?? 'NULL')}
-        </span>
+        {nomes.tail !== null && (
+          <>
+            <span className="mx-2 text-slate-300">|</span>
+            {nomes.tail} ={' '}
+            <span className={`font-bold ${vazia ? 'text-rose-600' : 'text-violet-700'}`}>
+              {vazia ? 'NULL' : (nodes[nodes.length - 1]?.value ?? 'NULL')}
+            </span>
+          </>
+        )}
         <span className="mx-2 text-slate-300">|</span>
         tamanho = <span className="font-bold text-slate-800">{state.size}</span>
       </p>

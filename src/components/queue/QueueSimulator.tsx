@@ -22,6 +22,7 @@ import { useSimulator } from '../../hooks/useSimulator';
 import { useStepPlayer } from '../../hooks/useStepPlayer';
 import type { QueueHighlight, QueueSnapshot } from '../../types/structures';
 import { DefaultHelp, SimulatorScaffold } from '../shared/SimulatorScaffold';
+import { type Implementation, ImplementationSwitch } from '../shared/ImplementationSwitch';
 import { type Notice, StatusBanner } from '../shared/controls';
 import { QueueControls } from './QueueControls';
 import { QueueView } from './QueueView';
@@ -47,7 +48,15 @@ function buildNotices(state: QueueState): readonly Notice[] {
   return [];
 }
 
-export function QueueSimulator() {
+interface QueueSimulatorProps {
+  readonly implementation: Implementation;
+  readonly onImplementationChange: (value: Implementation) => void;
+}
+
+export function QueueSimulator({
+  implementation,
+  onImplementationChange,
+}: QueueSimulatorProps) {
   const simulator = useSimulator<QueueState, QueueSnapshot, QueueHighlight>(
     createQueue(QUEUE_DEFAULT_CAPACITY),
   );
@@ -82,6 +91,13 @@ export function QueueSimulator() {
       }
       controls={
         <div className="flex flex-col gap-3">
+          <ImplementationSwitch
+            value={implementation}
+            onChange={onImplementationChange}
+            abstractType="fila"
+            hint="Na versão em vetor a capacidade é fixa e os ponteiros dão a volta no array, o que permite reaproveitar posições já liberadas."
+          />
+
           <QueueControls
             state={state}
             onEnqueue={(valor) => {

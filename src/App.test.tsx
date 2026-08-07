@@ -23,6 +23,14 @@ import {
   planSearch,
 } from './core/step-engine/linked-list-steps';
 import { planDequeue, planEnqueue } from './core/step-engine/queue-steps';
+import {
+  planDequeue as planDequeueEncadeado,
+  planEnqueue as planEnqueueEncadeado,
+} from './core/step-engine/linked-queue-steps';
+import {
+  planPop as planPopEncadeado,
+  planPush as planPushEncadeado,
+} from './core/step-engine/linked-stack-steps';
 import { planPop, planPush } from './core/step-engine/stack-steps';
 
 describe('App', () => {
@@ -90,6 +98,54 @@ describe('QueueView', () => {
             snapshot={step.snapshot}
             highlights={step.highlights}
             durationMs={1000}
+          />,
+        );
+        expect(html.length).toBeGreaterThan(0);
+      }
+    }
+  });
+});
+
+describe('LinkedListView com o vocabulário da pilha e da fila encadeadas', () => {
+  const pilha = createList('singly', [
+    { id: 'a', value: '7' },
+    { id: 'b', value: '9' },
+  ]);
+
+  it('rotula o primeiro nó como topo e esconde o rótulo de fundo', () => {
+    const html = renderToString(
+      <LinkedListView
+        snapshot={{ state: pilha, floating: null }}
+        highlights={[]}
+        durationMs={1000}
+        naming={{
+          head: 'topo',
+          tail: null,
+          empty: 'A pilha está vazia: o ponteiro de topo vale NULL.',
+          aria: 'Pilha encadeada',
+        }}
+      />,
+    );
+    expect(html).toContain('topo');
+    expect(html).not.toContain('cauda');
+  });
+
+  it('renderiza todos os passos das operações encadeadas sem erro', () => {
+    const trilhas = [
+      planPushEncadeado(pilha, { id: 'x', value: '3' }),
+      planPopEncadeado(pilha),
+      planEnqueueEncadeado(pilha, { id: 'x', value: '3' }),
+      planDequeueEncadeado(pilha),
+    ];
+
+    for (const trace of trilhas) {
+      for (const step of trace.steps) {
+        const html = renderToString(
+          <LinkedListView
+            snapshot={step.snapshot}
+            highlights={step.highlights}
+            durationMs={1000}
+            naming={{ head: 'topo', tail: null, empty: 'vazia', aria: 'estrutura' }}
           />,
         );
         expect(html.length).toBeGreaterThan(0);

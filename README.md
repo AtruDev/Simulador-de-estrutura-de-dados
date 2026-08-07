@@ -34,23 +34,38 @@ A navegação superior alterna entre as três estruturas. Cada simulador tem o
 mesmo formato: controles no topo, visualização ao centro, e um painel lateral
 com passo atual, complexidade, pseudocódigo e log da sessão.
 
-### Pilha (array com capacidade fixa)
+Pilha e fila têm **duas implementações do mesmo TAD**, alternáveis dentro da
+própria aba: vetor (alocação sequencial estática) e encadeada (alocação
+dinâmica). Trocar reinicia a estrutura, e a diferença aparece nos contadores:
+`push` grava uma posição no vetor e religa dois ponteiros na versão encadeada —
+mesmo O(1), custos concretos distintos. Só a versão em vetor tem `isFull()`,
+porque só ela pode transbordar.
 
-`push(valor)` · `pop()` · `peek()` · `isEmpty()` · `isFull()`
+### Pilha
 
-Desenhada verticalmente, da base ao topo, com todas as posições do array
-visíveis — inclusive as vazias, para que a capacidade seja concreta. Capacidade
-ajustável (4 a 20 posições; padrão 10), o que permite demonstrar *overflow* sem
-empilhar dezenas de elementos.
+`push(valor)` · `pop()` · `peek()` · `isEmpty()` · `isFull()` *(só em vetor)*
 
-### Fila (array circular)
+**Em vetor:** desenhada verticalmente, da base ao topo, com todas as posições do
+array visíveis — inclusive as vazias, para que a capacidade seja concreta.
+Capacidade ajustável (4 a 20 posições; padrão 10), o que permite demonstrar
+*overflow* sem empilhar dezenas de elementos.
 
-`enqueue(valor)` · `dequeue()` · `peek()` · `isEmpty()` · `isFull()`
+**Encadeada:** nós ligados por ponteiros, com o **topo** rotulado e `NULL` no
+fundo. Cada `push` aloca um nó e cada `pop` libera um — não há capacidade fixa,
+então overflow não existe.
 
-Desenhada horizontalmente, com os ponteiros de **início** e **fim** rotulados
-sobre as posições físicas do array. Como o array é circular, dá para mostrar os
-ponteiros dando a volta — o momento em que a maioria dos alunos trava.
-Capacidade ajustável (4 a 20; padrão 8).
+### Fila
+
+`enqueue(valor)` · `dequeue()` · `peek()` · `isEmpty()` · `isFull()` *(só em vetor)*
+
+**Em vetor circular:** desenhada horizontalmente, com os ponteiros de **início**
+e **fim** rotulados sobre as posições físicas do array. Como o array é circular,
+dá para mostrar os ponteiros dando a volta — o momento em que a maioria dos
+alunos trava. Capacidade ajustável (4 a 20; padrão 8).
+
+**Encadeada:** nós com **início** e **fim** apontando para as duas pontas. Nada
+dá a volta, porque não há array a reaproveitar; é o ponteiro de fim que mantém
+`enqueue` em O(1).
 
 ### Lista ligada (simples e duplamente ligada)
 
