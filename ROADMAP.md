@@ -49,8 +49,8 @@ Colocar o simulador na mão dos alunos antes de aumentar o escopo.
 
 - [x] Acessibilidade: navegação por setas nas abas, foco visível, `prefers-reduced-motion`
 - [x] README com funcionalidades, arquitetura e decisões
-- [ ] Deploy contínuo
-- [ ] Descrição e topics no repositório
+- [x] Deploy contínuo na Vercel, a cada push na `main`
+- [x] Descrição e topics no repositório
 
 ## Fase 1 — Fundamentos transversais
 

@@ -1,5 +1,8 @@
 # Simulador de Estruturas de Dados — AED
 
+**No ar em [simulador-de-estrutura-de-dados.vercel.app](https://simulador-de-estrutura-de-dados.vercel.app/)**
+— cada push na `main` publica automaticamente.
+
 Aplicação web educacional que ilustra, passo a passo, o funcionamento de
 **pilha**, **fila** e **lista ligada** (simples e dupla). Cada operação é
 decomposta em passos discretos, com descrição em português, pseudocódigo
