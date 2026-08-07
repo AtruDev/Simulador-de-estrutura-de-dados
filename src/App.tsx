@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { LinkedListSimulator } from './components/linked-list/LinkedListSimulator';
 import { QueueSimulator } from './components/queue/QueueSimulator';
 import { StackSimulator } from './components/stack/StackSimulator';
@@ -18,6 +18,39 @@ const TABS: readonly StructureTab[] = [
 export default function App() {
   const [activeId, setActiveId] = useState<string>(TABS[0]?.id ?? '');
   const active = TABS.find((tab) => tab.id === activeId) ?? TABS[0];
+  const botoes = useRef<(HTMLButtonElement | null)[]>([]);
+
+  /**
+   * Navegação por setas dentro da barra de abas, como manda o padrão ARIA de
+   * `tablist`. Sem isso o `role="tab"` prometeria ao leitor de tela um
+   * comportamento que não existe.
+   */
+  function aoTeclar(event: React.KeyboardEvent<HTMLUListElement>) {
+    const atual = TABS.findIndex((tab) => tab.id === active?.id);
+    if (atual < 0) return;
+
+    const destino =
+      event.key === 'ArrowRight'
+        ? (atual + 1) % TABS.length
+        : event.key === 'ArrowLeft'
+          ? (atual - 1 + TABS.length) % TABS.length
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? TABS.length - 1
+              : -1;
+
+    if (destino < 0) return;
+    event.preventDefault();
+    // `stopPropagation` impede que a mesma seta chegue ao atalho global do
+    // reprodutor e avance a animação junto com a troca de aba.
+    event.stopPropagation();
+
+    const alvo = TABS[destino];
+    if (alvo === undefined) return;
+    setActiveId(alvo.id);
+    botoes.current[destino]?.focus();
+  }
 
   return (
     <div className="min-h-screen">
@@ -33,8 +66,8 @@ export default function App() {
             </span>
           </span>
 
-          <ul className="flex gap-1" role="tablist">
-            {TABS.map((tab) => {
+          <ul className="flex gap-1" role="tablist" onKeyDown={aoTeclar}>
+            {TABS.map((tab, posicao) => {
               const selecionada = tab.id === active?.id;
               return (
                 <li key={tab.id} role="presentation">
@@ -42,8 +75,14 @@ export default function App() {
                     type="button"
                     role="tab"
                     id={`aba-${tab.id}`}
+                    ref={(elemento) => {
+                      botoes.current[posicao] = elemento;
+                    }}
                     aria-selected={selecionada}
                     aria-controls={`painel-${tab.id}`}
+                    // Tabulação roving: o Tab entra e sai da barra de abas de
+                    // uma vez; a navegação entre elas é pelas setas.
+                    tabIndex={selecionada ? 0 : -1}
                     onClick={() => {
                       setActiveId(tab.id);
                     }}
