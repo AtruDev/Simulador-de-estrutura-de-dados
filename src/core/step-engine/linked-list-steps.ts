@@ -132,18 +132,18 @@ type RotuloInsertHead =
 function pseudoInsertHead(variant: ListVariant): PseudocodigoRotulado<RotuloInsertHead> {
   return pseudocodigo<RotuloInsertHead>('insertHead(valor)', [
     'insertHead(valor):',
-    ['aloca', '  novo ← aloca nó com valor'],
-    ['ligaNext', '  novo.next ← cabeca'],
+    ['aloca', '  novo ← aloca nó com valor;'],
+    ['ligaNext', '  novo.next ← cabeca;'],
     ...(variant === 'doubly'
       ? ([
           '  se cabeca ≠ NULL então',
-          ['ligaPrev', '    cabeca.prev ← novo'],
+          ['ligaPrev', '    cabeca.prev ← novo;'],
           '  fim se',
         ] as const)
       : []),
-    ['atualizaCabeca', '  cabeca ← novo'],
+    ['atualizaCabeca', '  cabeca ← novo;'],
     '  se cauda = NULL então',
-    ['ajustaCauda', '    cauda ← novo'],
+    ['ajustaCauda', '    cauda ← novo;'],
     '  fim se',
   ]);
 }
@@ -159,18 +159,18 @@ type RotuloInsertTail =
 function pseudoInsertTail(variant: ListVariant): PseudocodigoRotulado<RotuloInsertTail> {
   return pseudocodigo<RotuloInsertTail>('insertTail(valor)', [
     'insertTail(valor):',
-    ['aloca', '  novo ← aloca nó com valor'],
-    ['terminaNext', '  novo.next ← NULL'],
+    ['aloca', '  novo ← aloca nó com valor;'],
+    ['terminaNext', '  novo.next ← NULL;'],
     '  se cauda = NULL então',
-    ['primeiroNo', '    cabeca ← novo'],
-    '    cauda ← novo',
-    '    retorna',
+    ['primeiroNo', '    cabeca ← novo;'],
+    '    cauda ← novo;',
+    '    retorna;',
     '  fim se',
-    ['ligaNextCauda', '  cauda.next ← novo'],
+    ['ligaNextCauda', '  cauda.next ← novo;'],
     ...(variant === 'doubly'
-      ? ([['ligaPrev', '  novo.prev ← cauda']] as const)
+      ? ([['ligaPrev', '  novo.prev ← cauda;']] as const)
       : []),
-    ['atualizaCauda', '  cauda ← novo'],
+    ['atualizaCauda', '  cauda ← novo;'],
   ]);
 }
 
@@ -187,29 +187,29 @@ function pseudoInsertAt(variant: ListVariant): PseudocodigoRotulado<RotuloInsert
   return pseudocodigo<RotuloInsertAt>('insertAt(i, valor)', [
     'insertAt(i, valor):',
     ['valida', '  se i < 0 ou i > tamanho então'],
-    ['indiceInvalido', '    erro: índice inválido'],
+    ['indiceInvalido', '    erro: índice inválido;'],
     '  fim se',
     '  se i = 0 então',
-    '    insertHead(valor)',
-    '    retorna',
+    '    insertHead(valor);',
+    '    retorna;',
     '  fim se',
-    '  atual ← cabeca',
-    '  k ← 0',
+    '  atual ← cabeca;',
+    '  k ← 0;',
     ['percorre', '  enquanto k < i - 1 faça'],
-    '    atual ← atual.next',
-    '    k ← k + 1',
+    '    atual ← atual.next;',
+    '    k ← k + 1;',
     '  fim enquanto',
-    ['aloca', '  novo ← aloca nó com valor'],
-    ['ligaNext', '  novo.next ← atual.next'],
+    ['aloca', '  novo ← aloca nó com valor;'],
+    ['ligaNext', '  novo.next ← atual.next;'],
     ...(variant === 'doubly'
       ? ([
-          ['ligaPrev', '  novo.prev ← atual'],
+          ['ligaPrev', '  novo.prev ← atual;'],
           '  se novo.next ≠ NULL então',
-          '    novo.next.prev ← novo',
+          '    novo.next.prev ← novo;',
           '  fim se',
         ] as const)
       : []),
-    ['ligaAnterior', '  atual.next ← novo'],
+    ['ligaAnterior', '  atual.next ← novo;'],
   ]);
 }
 
@@ -225,22 +225,22 @@ function pseudoDeleteHead(variant: ListVariant): PseudocodigoRotulado<RotuloDele
   return pseudocodigo<RotuloDeleteHead>('deleteHead()', [
     'deleteHead():',
     ['testeVazia', '  se cabeca = NULL então'],
-    ['vazia', '    erro: lista vazia'],
+    ['vazia', '    erro: lista vazia;'],
     '  fim se',
-    ['guarda', '  removido ← cabeca'],
-    ['avancaCabeca', '  cabeca ← removido.next'],
+    ['guarda', '  removido ← cabeca;'],
+    ['avancaCabeca', '  cabeca ← removido.next;'],
     ...(variant === 'doubly'
       ? ([
           '  se cabeca ≠ NULL então',
-          ['zeraPrev', '    cabeca.prev ← NULL'],
+          ['zeraPrev', '    cabeca.prev ← NULL;'],
           '  fim se',
         ] as const)
       : []),
     '  se cabeca = NULL então',
-    '    cauda ← NULL',
+    '    cauda ← NULL;',
     '  fim se',
-    ['libera', '  libera removido'],
-    '  retorna removido.valor',
+    ['libera', '  libera removido;'],
+    '  retorna removido.valor;',
   ]);
 }
 
@@ -266,40 +266,40 @@ function pseudoDeleteTail(variant: ListVariant): PseudocodigoRotulado<RotuloDele
     return pseudocodigo<RotuloDeleteTail>('deleteTail()', [
       'deleteTail():',
       ['testeVazia', '  se cauda = NULL então'],
-      ['vazia', '    erro: lista vazia'],
+      ['vazia', '    erro: lista vazia;'],
       '  fim se',
-      ['guarda', '  removido ← cauda'],
-      ['anterior', '  cauda ← removido.prev      // O(1): há caminho de volta'],
+      ['guarda', '  removido ← cauda;'],
+      ['anterior', '  cauda ← removido.prev;      // O(1): há caminho de volta'],
       '  se cauda ≠ NULL então',
-      ['desliga', '    cauda.next ← NULL'],
+      ['desliga', '    cauda.next ← NULL;'],
       '  senão',
-      ['esvazia', '    cabeca ← NULL'],
+      ['esvazia', '    cabeca ← NULL;'],
       '  fim se',
-      ['libera', '  libera removido'],
-      '  retorna removido.valor',
+      ['libera', '  libera removido;'],
+      '  retorna removido.valor;',
     ]);
   }
 
   return pseudocodigo<RotuloDeleteTail>('deleteTail()', [
     'deleteTail():',
     ['testeVazia', '  se cauda = NULL então'],
-    ['vazia', '    erro: lista vazia'],
+    ['vazia', '    erro: lista vazia;'],
     '  fim se',
-    ['guarda', '  removido ← cauda'],
+    ['guarda', '  removido ← cauda;'],
     '  se cabeca = cauda então',
-    ['esvazia', '    cabeca ← NULL'],
-    '    cauda ← NULL',
-    '    libera removido',
-    '    retorna removido.valor',
+    ['esvazia', '    cabeca ← NULL;'],
+    '    cauda ← NULL;',
+    '    libera removido;',
+    '    retorna removido.valor;',
     '  fim se',
-    '  atual ← cabeca',
+    '  atual ← cabeca;',
     ['percorre', '  enquanto atual.next ≠ cauda faça    // O(n)'],
-    '    atual ← atual.next',
+    '    atual ← atual.next;',
     '  fim enquanto',
-    ['desliga', '  atual.next ← NULL'],
-    ['atualizaCauda', '  cauda ← atual'],
-    ['libera', '  libera removido'],
-    '  retorna removido.valor',
+    ['desliga', '  atual.next ← NULL;'],
+    ['atualizaCauda', '  cauda ← atual;'],
+    ['libera', '  libera removido;'],
+    '  retorna removido.valor;',
   ]);
 }
 
@@ -316,43 +316,43 @@ function pseudoDeleteAt(variant: ListVariant): PseudocodigoRotulado<RotuloDelete
   return pseudocodigo<RotuloDeleteAt>('deleteAt(i)', [
     'deleteAt(i):',
     ['valida', '  se lista vazia ou i inválido então'],
-    ['invalido', '    erro: índice inválido'],
+    ['invalido', '    erro: índice inválido;'],
     '  fim se',
     '  se i = 0 então',
-    '    deleteHead()',
-    '    retorna',
+    '    deleteHead();',
+    '    retorna;',
     '  fim se',
-    '  atual ← cabeca',
-    '  k ← 0',
+    '  atual ← cabeca;',
+    '  k ← 0;',
     ['percorre', '  enquanto k < i - 1 faça'],
-    '    atual ← atual.next',
-    '    k ← k + 1',
+    '    atual ← atual.next;',
+    '    k ← k + 1;',
     '  fim enquanto',
-    ['identifica', '  removido ← atual.next'],
-    ['religa', '  atual.next ← removido.next'],
+    ['identifica', '  removido ← atual.next;'],
+    ['religa', '  atual.next ← removido.next;'],
     ...(variant === 'doubly'
       ? ([
           '  se removido.next ≠ NULL então',
-          ['religaPrev', '    removido.next.prev ← atual'],
+          ['religaPrev', '    removido.next.prev ← atual;'],
           '  fim se',
         ] as const)
       : []),
-    ['libera', '  libera removido'],
+    ['libera', '  libera removido;'],
   ]);
 }
 
 const SEARCH = pseudocodigo('search(valor)', [
   'search(valor):',
-  ['inicializa', '  atual ← cabeca'],
-  '  i ← 0',
+  ['inicializa', '  atual ← cabeca;'],
+  '  i ← 0;',
   ['percorre', '  enquanto atual ≠ NULL faça'],
   '    se atual.valor = valor então',
-  ['encontrou', '      retorna i'],
+  ['encontrou', '      retorna i;'],
   '    fim se',
-  ['avanca', '    atual ← atual.next'],
-  '    i ← i + 1',
+  ['avanca', '    atual ← atual.next;'],
+  '    i ← i + 1;',
   '  fim enquanto',
-  ['naoEncontrou', '  retorna "não encontrado"'],
+  ['naoEncontrou', '  retorna "não encontrado";'],
 ]);
 
 // ---------------------------------------------------------------------------

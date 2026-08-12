@@ -73,43 +73,43 @@ const C_TESTE = complexity(
 
 const ENQUEUE = pseudocodigo('enqueue(valor)', [
   'enqueue(valor):',
-  ['aloca', '  novo ← aloca nó com valor'],
-  ['terminaNext', '  novo.next ← NULL'],
+  ['aloca', '  novo ← aloca nó com valor;'],
+  ['terminaNext', '  novo.next ← NULL;'],
   ['testeVazia', '  se inicio = NULL então'],
-  ['primeiroNo', '    inicio ← novo'],
+  ['primeiroNo', '    inicio ← novo;'],
   '  senão',
-  ['ligaFim', '    fim.next ← novo'],
+  ['ligaFim', '    fim.next ← novo;'],
   '  fim se',
-  ['avancaFim', '  fim ← novo'],
-  ['incrementaTamanho', '  tamanho ← tamanho + 1'],
+  ['avancaFim', '  fim ← novo;'],
+  ['incrementaTamanho', '  tamanho ← tamanho + 1;'],
 ]);
 
 const DEQUEUE = pseudocodigo('dequeue()', [
   'dequeue():',
   ['testeVazia', '  se inicio = NULL então'],
-  ['underflow', '    erro: underflow — a fila está vazia'],
+  ['underflow', '    erro: underflow — a fila está vazia;'],
   '  fim se',
-  ['guarda', '  removido ← inicio'],
-  ['avancaInicio', '  inicio ← inicio.next'],
+  ['guarda', '  removido ← inicio;'],
+  ['avancaInicio', '  inicio ← inicio.next;'],
   '  se inicio = NULL então',
-  ['zeraFim', '    fim ← NULL'],
+  ['zeraFim', '    fim ← NULL;'],
   '  fim se',
-  ['libera', '  libera removido'],
-  ['decrementaTamanho', '  tamanho ← tamanho - 1'],
-  ['retorna', '  retorna removido.valor'],
+  ['libera', '  libera removido;'],
+  ['decrementaTamanho', '  tamanho ← tamanho - 1;'],
+  ['retorna', '  retorna removido.valor;'],
 ]);
 
 const PEEK = pseudocodigo('peek()', [
   'peek():',
   ['testeVazia', '  se inicio = NULL então'],
-  ['vazia', '    erro: a fila está vazia'],
+  ['vazia', '    erro: a fila está vazia;'],
   '  fim se',
-  ['retorna', '  retorna inicio.valor       // não move os ponteiros'],
+  ['retorna', '  retorna inicio.valor;       // não move os ponteiros'],
 ]);
 
 const IS_EMPTY = pseudocodigo('isEmpty()', [
   'isEmpty():',
-  ['retorna', '  retorna (inicio = NULL)'],
+  ['retorna', '  retorna (inicio = NULL);'],
 ]);
 
 // ---------------------------------------------------------------------------

@@ -29,43 +29,48 @@ import {
 
 // ---------------------------------------------------------------------------
 // Pseudocódigo — cada passo aponta para uma linha pelo rótulo, nunca pelo número
+//
+// O ponto e vírgula fecha **instrução**, não linha: cabeçalho, `se ... então`,
+// `senão`, `fim se`, `enquanto ... faça` e `fim enquanto` não levam, do mesmo
+// modo que em C `if (...) {` e `}` não levam. Quem escreve o trabalho em C
+// carrega o hábito daqui sem ter de desaprender nada.
 // ---------------------------------------------------------------------------
 
 const PUSH = pseudocodigo('push(valor)', [
   ['assinatura', 'push(valor):'],
   ['testeCheia', '  se topo = capacidade - 1 então'],
-  ['overflow', '    erro: overflow — a pilha está cheia'],
+  ['overflow', '    erro: overflow — a pilha está cheia;'],
   '  fim se',
-  ['grava', '  itens[topo + 1] ← valor'],
-  ['avancaTopo', '  topo ← topo + 1'],
+  ['grava', '  itens[topo + 1] ← valor;'],
+  ['avancaTopo', '  topo ← topo + 1;'],
 ]);
 
 const POP = pseudocodigo('pop()', [
   'pop():',
   ['testeVazia', '  se topo = -1 então'],
-  ['underflow', '    erro: underflow — a pilha está vazia'],
+  ['underflow', '    erro: underflow — a pilha está vazia;'],
   '  fim se',
-  ['le', '  valor ← itens[topo]'],
-  ['recuaTopo', '  topo ← topo - 1'],
-  ['retorna', '  retorna valor'],
+  ['le', '  valor ← itens[topo];'],
+  ['recuaTopo', '  topo ← topo - 1;'],
+  ['retorna', '  retorna valor;'],
 ]);
 
 const PEEK = pseudocodigo('peek()', [
   'peek():',
   ['testeVazia', '  se topo = -1 então'],
-  ['vazia', '    erro: a pilha está vazia'],
+  ['vazia', '    erro: a pilha está vazia;'],
   '  fim se',
-  ['retorna', '  retorna itens[topo]        // não altera o topo'],
+  ['retorna', '  retorna itens[topo];        // não altera o topo'],
 ]);
 
 const IS_EMPTY = pseudocodigo('isEmpty()', [
   'isEmpty():',
-  ['retorna', '  retorna (topo = -1)'],
+  ['retorna', '  retorna (topo = -1);'],
 ]);
 
 const IS_FULL = pseudocodigo('isFull()', [
   'isFull():',
-  ['retorna', '  retorna (topo = capacidade - 1)'],
+  ['retorna', '  retorna (topo = capacidade - 1);'],
 ]);
 
 // ---------------------------------------------------------------------------

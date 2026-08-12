@@ -75,35 +75,35 @@ const C_TESTE = complexity(
 
 const PUSH = pseudocodigo('push(valor)', [
   'push(valor):',
-  ['aloca', '  novo ← aloca nó com valor'],
-  ['ligaNext', '  novo.next ← topo'],
-  ['atualizaTopo', '  topo ← novo'],
-  ['incrementaTamanho', '  tamanho ← tamanho + 1'],
+  ['aloca', '  novo ← aloca nó com valor;'],
+  ['ligaNext', '  novo.next ← topo;'],
+  ['atualizaTopo', '  topo ← novo;'],
+  ['incrementaTamanho', '  tamanho ← tamanho + 1;'],
 ]);
 
 const POP = pseudocodigo('pop()', [
   'pop():',
   ['testeVazia', '  se topo = NULL então'],
-  ['underflow', '    erro: underflow — a pilha está vazia'],
+  ['underflow', '    erro: underflow — a pilha está vazia;'],
   '  fim se',
-  ['guarda', '  removido ← topo'],
-  ['avancaTopo', '  topo ← topo.next'],
-  ['libera', '  libera removido'],
-  ['decrementaTamanho', '  tamanho ← tamanho - 1'],
-  ['retorna', '  retorna removido.valor'],
+  ['guarda', '  removido ← topo;'],
+  ['avancaTopo', '  topo ← topo.next;'],
+  ['libera', '  libera removido;'],
+  ['decrementaTamanho', '  tamanho ← tamanho - 1;'],
+  ['retorna', '  retorna removido.valor;'],
 ]);
 
 const PEEK = pseudocodigo('peek()', [
   'peek():',
   ['testeVazia', '  se topo = NULL então'],
-  ['vazia', '    erro: a pilha está vazia'],
+  ['vazia', '    erro: a pilha está vazia;'],
   '  fim se',
-  ['retorna', '  retorna topo.valor         // não move o topo'],
+  ['retorna', '  retorna topo.valor;         // não move o topo'],
 ]);
 
 const IS_EMPTY = pseudocodigo('isEmpty()', [
   'isEmpty():',
-  ['retorna', '  retorna (topo = NULL)'],
+  ['retorna', '  retorna (topo = NULL);'],
 ]);
 
 // ---------------------------------------------------------------------------

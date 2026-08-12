@@ -33,41 +33,41 @@ import {
 const ENQUEUE = pseudocodigo('enqueue(valor)', [
   ['assinatura', 'enqueue(valor):'],
   ['testeCheia', '  se total = capacidade então'],
-  ['overflow', '    erro: overflow — a fila está cheia'],
+  ['overflow', '    erro: overflow — a fila está cheia;'],
   '  fim se',
-  ['grava', '  itens[fim] ← valor'],
-  ['avancaFim', '  fim ← (fim + 1) mod capacidade'],
-  ['incrementaTotal', '  total ← total + 1'],
+  ['grava', '  itens[fim] ← valor;'],
+  ['avancaFim', '  fim ← (fim + 1) mod capacidade;'],
+  ['incrementaTotal', '  total ← total + 1;'],
 ]);
 
 const DEQUEUE = pseudocodigo('dequeue()', [
   'dequeue():',
   ['testeVazia', '  se total = 0 então'],
-  ['underflow', '    erro: underflow — a fila está vazia'],
+  ['underflow', '    erro: underflow — a fila está vazia;'],
   '  fim se',
-  ['le', '  valor ← itens[inicio]'],
-  ['libera', '  itens[inicio] ← vazio'],
-  ['avancaInicio', '  inicio ← (inicio + 1) mod capacidade'],
-  ['decrementaTotal', '  total ← total - 1'],
-  ['retorna', '  retorna valor'],
+  ['le', '  valor ← itens[inicio];'],
+  ['libera', '  itens[inicio] ← vazio;'],
+  ['avancaInicio', '  inicio ← (inicio + 1) mod capacidade;'],
+  ['decrementaTotal', '  total ← total - 1;'],
+  ['retorna', '  retorna valor;'],
 ]);
 
 const PEEK = pseudocodigo('peek()', [
   'peek():',
   ['testeVazia', '  se total = 0 então'],
-  ['vazia', '    erro: a fila está vazia'],
+  ['vazia', '    erro: a fila está vazia;'],
   '  fim se',
-  ['retorna', '  retorna itens[inicio]      // não move os ponteiros'],
+  ['retorna', '  retorna itens[inicio];      // não move os ponteiros'],
 ]);
 
 const IS_EMPTY = pseudocodigo('isEmpty()', [
   'isEmpty():',
-  ['retorna', '  retorna (total = 0)'],
+  ['retorna', '  retorna (total = 0);'],
 ]);
 
 const IS_FULL = pseudocodigo('isFull()', [
   'isFull():',
-  ['retorna', '  retorna (total = capacidade)'],
+  ['retorna', '  retorna (total = capacidade);'],
 ]);
 
 // ---------------------------------------------------------------------------
