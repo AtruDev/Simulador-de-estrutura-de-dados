@@ -104,6 +104,67 @@ export function complexity(notation: string, rationale: string): Complexity {
   return { notation, rationale };
 }
 
+// ---------------------------------------------------------------------------
+// Pseudocódigo com linhas rotuladas
+// ---------------------------------------------------------------------------
+
+/**
+ * Uma linha do pseudocódigo. Quando algum passo precisa apontar para ela, vem
+ * como par `[rótulo, texto]`; linhas puramente estruturais (`fim se`, `fim
+ * enquanto`) que ninguém referencia vêm como texto solto.
+ */
+type Linha<R extends string> = string | readonly [R, string];
+
+export interface PseudocodigoRotulado<R extends string> {
+  readonly code: Pseudocode;
+  /** Índice da linha de cada rótulo, para alimentar `codeLine`. */
+  readonly em: Readonly<Record<R, number>>;
+}
+
+/**
+ * Declara um pseudocódigo cujas linhas são endereçadas por **nome**, não por
+ * número.
+ *
+ * O motivo é a fragilidade do endereçamento por índice: `codeLine: 4` só está
+ * certo enquanto ninguém inserir uma linha acima da quarta. Quando alguém
+ * insere, todos os índices seguintes passam a apontar para a linha de cima — e
+ * nada acusa o erro, porque o índice continua dentro dos limites do array. O
+ * sintoma aparece só na tela, com o destaque uma linha fora do lugar, que é
+ * justamente o tipo de defeito que um material de estudo não pode ter.
+ *
+ * Com rótulo, reordenar ou inserir linhas não quebra nada, e um nome errado
+ * vira erro de compilação em vez de destaque silenciosamente torto.
+ */
+export function pseudocodigo<const R extends string>(
+  title: string,
+  linhas: readonly Linha<R>[],
+): PseudocodigoRotulado<R> {
+  const textos: string[] = [];
+  const em = {} as Record<R, number>;
+
+  for (const linha of linhas) {
+    if (typeof linha === 'string') {
+      textos.push(linha);
+      continue;
+    }
+
+    const [rotulo, texto] = linha;
+    if (rotulo in em) {
+      throw new Error(`Rótulo repetido no pseudocódigo de ${title}: ${rotulo}.`);
+    }
+    // O índice é a posição que a linha ocupará — por isso antes do push.
+    em[rotulo] = textos.length;
+    textos.push(texto);
+  }
+
+  const [primeira, ...resto] = textos;
+  if (primeira === undefined) {
+    throw new Error(`O pseudocódigo de ${title} está sem linhas.`);
+  }
+
+  return { code: { title, lines: [primeira, ...resto] }, em };
+}
+
 /** Formata um valor para exibição dentro das descrições dos passos. */
 export function quote(value: string): string {
   return `«${value}»`;

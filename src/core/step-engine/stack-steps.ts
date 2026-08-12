@@ -18,59 +18,55 @@ import {
   size,
   topIndex,
 } from '../data-structures/stack';
-import type { Pseudocode } from '../../types/step';
 import type { StackHighlight, StackSnapshot, StackTrace } from '../../types/structures';
-import { type TraceBuilder, complexity, createTraceBuilder, quote } from './trace-builder';
+import {
+  type TraceBuilder,
+  complexity,
+  createTraceBuilder,
+  pseudocodigo,
+  quote,
+} from './trace-builder';
 
 // ---------------------------------------------------------------------------
-// Pseudocódigo — as linhas são referenciadas por índice em cada passo
+// Pseudocódigo — cada passo aponta para uma linha pelo rótulo, nunca pelo número
 // ---------------------------------------------------------------------------
 
-const PSEUDO_PUSH: Pseudocode = {
-  title: 'push(valor)',
-  lines: [
-    'push(valor):',
-    '  se topo = capacidade - 1 então',
-    '    erro: overflow — a pilha está cheia',
-    '  fim se',
-    '  itens[topo + 1] ← valor',
-    '  topo ← topo + 1',
-  ],
-};
+const PUSH = pseudocodigo('push(valor)', [
+  ['assinatura', 'push(valor):'],
+  ['testeCheia', '  se topo = capacidade - 1 então'],
+  ['overflow', '    erro: overflow — a pilha está cheia'],
+  '  fim se',
+  ['grava', '  itens[topo + 1] ← valor'],
+  ['avancaTopo', '  topo ← topo + 1'],
+]);
 
-const PSEUDO_POP: Pseudocode = {
-  title: 'pop()',
-  lines: [
-    'pop():',
-    '  se topo = -1 então',
-    '    erro: underflow — a pilha está vazia',
-    '  fim se',
-    '  valor ← itens[topo]',
-    '  topo ← topo - 1',
-    '  retorna valor',
-  ],
-};
+const POP = pseudocodigo('pop()', [
+  'pop():',
+  ['testeVazia', '  se topo = -1 então'],
+  ['underflow', '    erro: underflow — a pilha está vazia'],
+  '  fim se',
+  ['le', '  valor ← itens[topo]'],
+  ['recuaTopo', '  topo ← topo - 1'],
+  ['retorna', '  retorna valor'],
+]);
 
-const PSEUDO_PEEK: Pseudocode = {
-  title: 'peek()',
-  lines: [
-    'peek():',
-    '  se topo = -1 então',
-    '    erro: a pilha está vazia',
-    '  fim se',
-    '  retorna itens[topo]   // não altera o topo',
-  ],
-};
+const PEEK = pseudocodigo('peek()', [
+  'peek():',
+  ['testeVazia', '  se topo = -1 então'],
+  ['vazia', '    erro: a pilha está vazia'],
+  '  fim se',
+  ['retorna', '  retorna itens[topo]        // não altera o topo'],
+]);
 
-const PSEUDO_IS_EMPTY: Pseudocode = {
-  title: 'isEmpty()',
-  lines: ['isEmpty():', '  retorna (topo = -1)'],
-};
+const IS_EMPTY = pseudocodigo('isEmpty()', [
+  'isEmpty():',
+  ['retorna', '  retorna (topo = -1)'],
+]);
 
-const PSEUDO_IS_FULL: Pseudocode = {
-  title: 'isFull()',
-  lines: ['isFull():', '  retorna (topo = capacidade - 1)'],
-};
+const IS_FULL = pseudocodigo('isFull()', [
+  'isFull():',
+  ['retorna', '  retorna (topo = capacidade - 1)'],
+]);
 
 // ---------------------------------------------------------------------------
 // Complexidades
@@ -129,7 +125,7 @@ export function planPush(state: StackState, item: StackItem): StackTrace {
     description: `Um elemento com o valor ${quote(item.value)} é preparado para entrar na pilha. Ele ainda não faz parte da estrutura.`,
     snapshot: { state, floating: { item, phase: 'entering' } },
     highlights: [{ kind: 'floating', role: 'entering' }],
-    codeLine: 0,
+    codeLine: PUSH.em.assinatura,
   });
 
   builder.add({
@@ -137,7 +133,7 @@ export function planPush(state: StackState, item: StackItem): StackTrace {
     description: `A pilha ocupa ${occupancy(state)}. Como o array tem capacidade fixa, é preciso confirmar que o topo ainda não chegou à última posição (índice ${state.capacity - 1}).`,
     snapshot: { state, floating: { item, phase: 'entering' } },
     highlights: [{ kind: 'pointer', pointer: 'top', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: PUSH.em.testeCheia,
   });
 
   const result = push(state, item);
@@ -148,7 +144,7 @@ export function planPush(state: StackState, item: StackItem): StackTrace {
       description: `O topo já ocupa a última posição do array (índice ${state.capacity - 1}), então não há para onde a pilha crescer. O elemento ${quote(item.value)} é descartado e a pilha permanece inalterada. Para abrir espaço é preciso remover elementos com pop().`,
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'top', role: 'target' }],
-      codeLine: 2,
+      codeLine: PUSH.em.overflow,
       tone: 'error',
     });
 
@@ -157,7 +153,7 @@ export function planPush(state: StackState, item: StackItem): StackTrace {
       complexity: C_PUSH,
       outcome: 'error',
       summary: `Overflow: a pilha já tinha ${state.capacity} elementos, o valor ${quote(item.value)} não foi empilhado.`,
-      pseudocode: PSEUDO_PUSH,
+      pseudocode: PUSH.code,
     });
   }
 
@@ -168,7 +164,7 @@ export function planPush(state: StackState, item: StackItem): StackTrace {
     description: `O valor ${quote(item.value)} é gravado na posição ${novoTopo} do array, logo acima do elemento que era o topo até agora.`,
     snapshot: still(result.state),
     highlights: [{ kind: 'slot', index: novoTopo, role: 'entering' }],
-    codeLine: 4,
+    codeLine: PUSH.em.grava,
     counts: { moves: 1 },
   });
 
@@ -180,7 +176,7 @@ export function planPush(state: StackState, item: StackItem): StackTrace {
       { kind: 'slot', index: novoTopo, role: 'anchor' },
       { kind: 'pointer', pointer: 'top', role: 'anchor' },
     ],
-    codeLine: 5,
+    codeLine: PUSH.em.avancaTopo,
     tone: 'success',
   });
 
@@ -189,7 +185,7 @@ export function planPush(state: StackState, item: StackItem): StackTrace {
     complexity: C_PUSH,
     outcome: 'success',
     summary: `${quote(item.value)} foi empilhado no topo (posição ${novoTopo}).`,
-    pseudocode: PSEUDO_PUSH,
+    pseudocode: PUSH.code,
   });
 }
 
@@ -207,7 +203,7 @@ export function planPop(state: StackState): StackTrace {
       'Antes de remover, é preciso confirmar que existe algum elemento: numa pilha vazia o índice do topo vale -1.',
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'top', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: POP.em.testeVazia,
   });
 
   const result = pop(state);
@@ -219,7 +215,7 @@ export function planPop(state: StackState): StackTrace {
         'O índice do topo vale -1, ou seja, não há nenhum elemento para remover. A operação é cancelada e a pilha continua vazia. Empilhe algo com push() antes de tentar novamente.',
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'top', role: 'target' }],
-      codeLine: 2,
+      codeLine: POP.em.underflow,
       tone: 'error',
     });
 
@@ -228,7 +224,7 @@ export function planPop(state: StackState): StackTrace {
       complexity: C_POP,
       outcome: 'error',
       summary: 'Underflow: não há elementos para desempilhar.',
-      pseudocode: PSEUDO_POP,
+      pseudocode: POP.code,
     });
   }
 
@@ -240,30 +236,31 @@ export function planPop(state: StackState): StackTrace {
     description: `O índice do topo aponta para a posição ${indiceRemovido}, que guarda ${quote(removido.value)}. Numa pilha é sempre esse elemento que sai — o último que entrou é o primeiro a sair (LIFO).`,
     snapshot: still(state),
     highlights: [{ kind: 'slot', index: indiceRemovido, role: 'leaving' }],
-    codeLine: 4,
+    codeLine: POP.em.le,
     counts: { visits: 1 },
   });
 
+  const novoTopo = topIndex(result.state);
+
   builder.add({
-    title: 'Remove o elemento do topo',
-    description: `${quote(removido.value)} deixa a pilha e é devolvido a quem chamou pop().`,
+    title: 'Recua o índice do topo',
+    description: `O topo passa de ${indiceRemovido} para ${novoTopo}. É essa única subtração que remove ${quote(removido.value)}: a posição ${indiceRemovido} deixa de pertencer à pilha, sem que nenhum outro elemento precise ser deslocado.`,
     snapshot: { state: result.state, floating: { item: removido, phase: 'leaving' } },
     highlights: [{ kind: 'floating', role: 'leaving' }],
-    codeLine: 5,
+    codeLine: POP.em.recuaTopo,
     counts: { moves: 1 },
   });
 
-  const novoTopo = topIndex(result.state);
-  const descricaoTopo = isEmpty(result.state)
-    ? 'O índice do topo passa a valer -1: a pilha ficou vazia.'
-    : `O índice do topo passa de ${indiceRemovido} para ${novoTopo}, e ${quote(result.state.items[novoTopo]?.value ?? '')} volta a ser o topo.`;
+  const estadoFinal = isEmpty(result.state)
+    ? 'A pilha ficou vazia: o topo voltou a valer -1.'
+    : `A pilha agora ocupa ${occupancy(result.state)}, com ${quote(result.state.items[novoTopo]?.value ?? '')} no topo.`;
 
   builder.add({
-    title: 'Atualiza o índice do topo',
-    description: `${descricaoTopo} A pilha agora ocupa ${occupancy(result.state)}.`,
+    title: 'Devolve o valor removido',
+    description: `pop() entrega ${quote(removido.value)} a quem o chamou. ${estadoFinal}`,
     snapshot: still(result.state),
     highlights: [{ kind: 'pointer', pointer: 'top', role: 'anchor' }],
-    codeLine: 6,
+    codeLine: POP.em.retorna,
     tone: 'success',
   });
 
@@ -272,7 +269,7 @@ export function planPop(state: StackState): StackTrace {
     complexity: C_POP,
     outcome: 'success',
     summary: `${quote(removido.value)} foi desempilhado do topo.`,
-    pseudocode: PSEUDO_POP,
+    pseudocode: POP.code,
   });
 }
 
@@ -290,7 +287,7 @@ export function planPeek(state: StackState): StackTrace {
       'Para consultar o topo é preciso que exista pelo menos um elemento — numa pilha vazia o índice do topo vale -1.',
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'top', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: PEEK.em.testeVazia,
   });
 
   const result = peek(state);
@@ -302,7 +299,7 @@ export function planPeek(state: StackState): StackTrace {
         'Não há topo para consultar: a pilha não contém nenhum elemento. A operação é cancelada e nada é alterado.',
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'top', role: 'target' }],
-      codeLine: 2,
+      codeLine: PEEK.em.vazia,
       tone: 'error',
     });
 
@@ -311,7 +308,7 @@ export function planPeek(state: StackState): StackTrace {
       complexity: C_PEEK,
       outcome: 'error',
       summary: 'A pilha está vazia, não há topo para consultar.',
-      pseudocode: PSEUDO_PEEK,
+      pseudocode: PEEK.code,
     });
   }
 
@@ -320,7 +317,7 @@ export function planPeek(state: StackState): StackTrace {
     description: `O topo está na posição ${result.index} e guarda ${quote(result.item.value)}. A operação peek() apenas lê esse valor: o elemento continua na pilha e o índice do topo não muda.`,
     snapshot: still(state),
     highlights: [{ kind: 'slot', index: result.index, role: 'inspected' }],
-    codeLine: 4,
+    codeLine: PEEK.em.retorna,
     tone: 'success',
     counts: { visits: 1 },
   });
@@ -330,7 +327,7 @@ export function planPeek(state: StackState): StackTrace {
     complexity: C_PEEK,
     outcome: 'success',
     summary: `O topo da pilha é ${quote(result.item.value)} (posição ${result.index}). Nada foi removido.`,
-    pseudocode: PSEUDO_PEEK,
+    pseudocode: PEEK.code,
   });
 }
 
@@ -347,7 +344,7 @@ export function planIsEmpty(state: StackState): StackTrace {
     description: `O teste de pilha vazia não percorre a estrutura: basta olhar o índice do topo, que agora vale ${topIndex(state)}.`,
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'top', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: IS_EMPTY.em.retorna,
   });
 
   builder.add({
@@ -357,7 +354,7 @@ export function planIsEmpty(state: StackState): StackTrace {
       : `O índice do topo vale ${topIndex(state)}, logo isEmpty() devolve falso. A pilha guarda ${occupancy(state)}.`,
     snapshot: still(state),
     highlights: vazia ? [] : [{ kind: 'slot', index: topIndex(state), role: 'inspected' }],
-    codeLine: 1,
+    codeLine: IS_EMPTY.em.retorna,
     tone: 'success',
   });
 
@@ -366,7 +363,7 @@ export function planIsEmpty(state: StackState): StackTrace {
     complexity: C_TESTE,
     outcome: 'success',
     summary: `isEmpty() = ${vazia ? 'verdadeiro' : 'falso'} (${occupancy(state)}).`,
-    pseudocode: PSEUDO_IS_EMPTY,
+    pseudocode: IS_EMPTY.code,
   });
 }
 
@@ -379,7 +376,7 @@ export function planIsFull(state: StackState): StackTrace {
     description: `O teste de pilha cheia também é imediato: compara-se o índice do topo (${topIndex(state)}) com a última posição do array (${state.capacity - 1}).`,
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'top', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: IS_FULL.em.retorna,
   });
 
   builder.add({
@@ -389,7 +386,7 @@ export function planIsFull(state: StackState): StackTrace {
       : `Ainda restam ${state.capacity - size(state)} ${state.capacity - size(state) === 1 ? 'posição livre' : 'posições livres'}, logo isFull() devolve falso.`,
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'top', role: cheia ? 'target' : 'inspected' }],
-    codeLine: 1,
+    codeLine: IS_FULL.em.retorna,
     tone: 'success',
   });
 
@@ -398,6 +395,6 @@ export function planIsFull(state: StackState): StackTrace {
     complexity: C_TESTE,
     outcome: 'success',
     summary: `isFull() = ${cheia ? 'verdadeiro' : 'falso'} (${occupancy(state)}).`,
-    pseudocode: PSEUDO_IS_FULL,
+    pseudocode: IS_FULL.code,
   });
 }

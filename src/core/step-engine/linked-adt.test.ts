@@ -228,6 +228,25 @@ describe('as trilhas encadeadas se comportam como as demais', () => {
     for (const trace of trilhas) expect(trace.steps.length).toBeGreaterThan(0);
   });
 
+  /**
+   * As linhas do pseudocódigo são endereçadas por rótulo. Um rótulo inexistente
+   * não quebra a compilação: resolve para `undefined`, que vira `null` e deixa
+   * o passo sem linha destacada. Exigir uma linha em todo passo é o que
+   * transforma esse engano silencioso em teste vermelho.
+   */
+  it('todo passo aponta para uma linha existente do pseudocódigo', () => {
+    for (const trace of trilhas) {
+      for (const step of trace.steps) {
+        expect(
+          step.codeLine,
+          `passo "${step.title}" de ${trace.label} ficou sem linha`,
+        ).not.toBeNull();
+        expect(step.codeLine).toBeGreaterThanOrEqual(0);
+        expect(step.codeLine).toBeLessThan(trace.pseudocode.lines.length);
+      }
+    }
+  });
+
   it('trilhas com erro terminam num passo de tom "error"', () => {
     for (const trace of trilhas.filter((t) => t.outcome === 'error')) {
       expect(trace.steps.at(-1)?.tone).toBe('error');

@@ -26,9 +26,15 @@ import {
   nodeIds,
   search,
 } from '../data-structures/linked-list';
-import type { NonEmptyArray, Pseudocode } from '../../types/step';
 import type { ListHighlight, ListSnapshot, ListTrace } from '../../types/structures';
-import { type TraceBuilder, complexity, createTraceBuilder, quote } from './trace-builder';
+import {
+  type PseudocodigoRotulado,
+  type TraceBuilder,
+  complexity,
+  createTraceBuilder,
+  pseudocodigo,
+  quote,
+} from './trace-builder';
 
 // ---------------------------------------------------------------------------
 // Auxiliares
@@ -61,12 +67,6 @@ function nodeLabel(state: LinkedListState, id: string | null): string {
   return node === null ? 'NULL' : quote(node.value);
 }
 
-/** Monta um pseudocódigo garantindo o tipo "ao menos uma linha". */
-function pseudocode(title: string, lines: readonly string[]): Pseudocode {
-  const [first, ...rest] = lines;
-  const safe: NonEmptyArray<string> = first === undefined ? [title] : [first, ...rest];
-  return { title, lines: safe };
-}
 
 // ---------------------------------------------------------------------------
 // Complexidades
@@ -116,110 +116,243 @@ const C_SEARCH = complexity(
 // Pseudocódigos
 // ---------------------------------------------------------------------------
 
-function pseudoInsertHead(variant: ListVariant): Pseudocode {
-  const linhas = [
+/**
+ * Os rótulos são declarados por extenso, e não inferidos, porque as variantes
+ * simples e dupla produzem conjuntos de linhas diferentes: com o tipo fixo, a
+ * assinatura de cada planejador não muda conforme a variante. Um rótulo que só
+ * existe na lista dupla é lido apenas dentro do ramo `duplamente`.
+ */
+type RotuloInsertHead =
+  | 'aloca'
+  | 'ligaNext'
+  | 'ligaPrev'
+  | 'atualizaCabeca'
+  | 'ajustaCauda';
+
+function pseudoInsertHead(variant: ListVariant): PseudocodigoRotulado<RotuloInsertHead> {
+  return pseudocodigo<RotuloInsertHead>('insertHead(valor)', [
     'insertHead(valor):',
-    '  novo ← aloca nó com valor',
-    '  novo.next ← cabeca',
+    ['aloca', '  novo ← aloca nó com valor'],
+    ['ligaNext', '  novo.next ← cabeca'],
     ...(variant === 'doubly'
-      ? ['  se cabeca ≠ NULL então cabeca.prev ← novo']
+      ? ([
+          '  se cabeca ≠ NULL então',
+          ['ligaPrev', '    cabeca.prev ← novo'],
+          '  fim se',
+        ] as const)
       : []),
-    '  cabeca ← novo',
-    '  se cauda = NULL então cauda ← novo',
-  ];
-  return pseudocode('insertHead(valor)', linhas);
-}
-
-function pseudoInsertTail(variant: ListVariant): Pseudocode {
-  const linhas = [
-    'insertTail(valor):',
-    '  novo ← aloca nó com valor; novo.next ← NULL',
+    ['atualizaCabeca', '  cabeca ← novo'],
     '  se cauda = NULL então',
-    '    cabeca ← novo; cauda ← novo; retorna',
-    '  cauda.next ← novo',
-    ...(variant === 'doubly' ? ['  novo.prev ← cauda'] : []),
-    '  cauda ← novo',
-  ];
-  return pseudocode('insertTail(valor)', linhas);
+    ['ajustaCauda', '    cauda ← novo'],
+    '  fim se',
+  ]);
 }
 
-function pseudoInsertAt(variant: ListVariant): Pseudocode {
-  const linhas = [
+type RotuloInsertTail =
+  | 'aloca'
+  | 'terminaNext'
+  | 'primeiroNo'
+  | 'ligaNextCauda'
+  | 'ligaPrev'
+  | 'atualizaCauda';
+
+function pseudoInsertTail(variant: ListVariant): PseudocodigoRotulado<RotuloInsertTail> {
+  return pseudocodigo<RotuloInsertTail>('insertTail(valor)', [
+    'insertTail(valor):',
+    ['aloca', '  novo ← aloca nó com valor'],
+    ['terminaNext', '  novo.next ← NULL'],
+    '  se cauda = NULL então',
+    ['primeiroNo', '    cabeca ← novo'],
+    '    cauda ← novo',
+    '    retorna',
+    '  fim se',
+    ['ligaNextCauda', '  cauda.next ← novo'],
+    ...(variant === 'doubly'
+      ? ([['ligaPrev', '  novo.prev ← cauda']] as const)
+      : []),
+    ['atualizaCauda', '  cauda ← novo'],
+  ]);
+}
+
+type RotuloInsertAt =
+  | 'valida'
+  | 'indiceInvalido'
+  | 'percorre'
+  | 'aloca'
+  | 'ligaNext'
+  | 'ligaPrev'
+  | 'ligaAnterior';
+
+function pseudoInsertAt(variant: ListVariant): PseudocodigoRotulado<RotuloInsertAt> {
+  return pseudocodigo<RotuloInsertAt>('insertAt(i, valor)', [
     'insertAt(i, valor):',
-    '  se i < 0 ou i > tamanho então erro: índice inválido',
-    '  se i = 0 então insertHead(valor); retorna',
-    '  atual ← cabeca; k ← 0',
-    '  enquanto k < i - 1 faça  atual ← atual.next; k ← k + 1',
-    '  novo ← aloca nó com valor',
-    '  novo.next ← atual.next',
+    ['valida', '  se i < 0 ou i > tamanho então'],
+    ['indiceInvalido', '    erro: índice inválido'],
+    '  fim se',
+    '  se i = 0 então',
+    '    insertHead(valor)',
+    '    retorna',
+    '  fim se',
+    '  atual ← cabeca',
+    '  k ← 0',
+    ['percorre', '  enquanto k < i - 1 faça'],
+    '    atual ← atual.next',
+    '    k ← k + 1',
+    '  fim enquanto',
+    ['aloca', '  novo ← aloca nó com valor'],
+    ['ligaNext', '  novo.next ← atual.next'],
     ...(variant === 'doubly'
-      ? ['  novo.prev ← atual; se novo.next ≠ NULL então novo.next.prev ← novo']
+      ? ([
+          ['ligaPrev', '  novo.prev ← atual'],
+          '  se novo.next ≠ NULL então',
+          '    novo.next.prev ← novo',
+          '  fim se',
+        ] as const)
       : []),
-    '  atual.next ← novo',
-  ];
-  return pseudocode('insertAt(i, valor)', linhas);
+    ['ligaAnterior', '  atual.next ← novo'],
+  ]);
 }
 
-function pseudoDeleteHead(variant: ListVariant): Pseudocode {
-  const linhas = [
+type RotuloDeleteHead =
+  | 'testeVazia'
+  | 'vazia'
+  | 'guarda'
+  | 'avancaCabeca'
+  | 'zeraPrev'
+  | 'libera';
+
+function pseudoDeleteHead(variant: ListVariant): PseudocodigoRotulado<RotuloDeleteHead> {
+  return pseudocodigo<RotuloDeleteHead>('deleteHead()', [
     'deleteHead():',
-    '  se cabeca = NULL então erro: lista vazia',
-    '  removido ← cabeca',
-    '  cabeca ← removido.next',
-    ...(variant === 'doubly' ? ['  se cabeca ≠ NULL então cabeca.prev ← NULL'] : []),
-    '  se cabeca = NULL então cauda ← NULL',
-    '  libera removido; retorna removido.valor',
-  ];
-  return pseudocode('deleteHead()', linhas);
-}
-
-function pseudoDeleteTail(variant: ListVariant): Pseudocode {
-  const linhas =
-    variant === 'doubly'
-      ? [
-          'deleteTail():',
-          '  se cauda = NULL então erro: lista vazia',
-          '  removido ← cauda',
-          '  cauda ← removido.prev        // O(1): há caminho de volta',
-          '  se cauda ≠ NULL então cauda.next ← NULL senão cabeca ← NULL',
-          '  libera removido; retorna removido.valor',
-        ]
-      : [
-          'deleteTail():',
-          '  se cauda = NULL então erro: lista vazia',
-          '  removido ← cauda',
-          '  atual ← cabeca',
-          '  enquanto atual.next ≠ cauda faça  atual ← atual.next   // O(n)',
-          '  atual.next ← NULL; cauda ← atual',
-          '  libera removido; retorna removido.valor',
-        ];
-  return pseudocode('deleteTail()', linhas);
-}
-
-function pseudoDeleteAt(variant: ListVariant): Pseudocode {
-  const linhas = [
-    'deleteAt(i):',
-    '  se lista vazia ou i inválido então erro',
-    '  se i = 0 então deleteHead(); retorna',
-    '  atual ← cabeca; k ← 0',
-    '  enquanto k < i - 1 faça  atual ← atual.next; k ← k + 1',
-    '  removido ← atual.next',
-    '  atual.next ← removido.next',
+    ['testeVazia', '  se cabeca = NULL então'],
+    ['vazia', '    erro: lista vazia'],
+    '  fim se',
+    ['guarda', '  removido ← cabeca'],
+    ['avancaCabeca', '  cabeca ← removido.next'],
     ...(variant === 'doubly'
-      ? ['  se removido.next ≠ NULL então removido.next.prev ← atual']
+      ? ([
+          '  se cabeca ≠ NULL então',
+          ['zeraPrev', '    cabeca.prev ← NULL'],
+          '  fim se',
+        ] as const)
       : []),
-    '  libera removido',
-  ];
-  return pseudocode('deleteAt(i)', linhas);
+    '  se cabeca = NULL então',
+    '    cauda ← NULL',
+    '  fim se',
+    ['libera', '  libera removido'],
+    '  retorna removido.valor',
+  ]);
 }
 
-const PSEUDO_SEARCH = pseudocode('search(valor)', [
+type RotuloDeleteTail =
+  | 'testeVazia'
+  | 'vazia'
+  | 'guarda'
+  | 'esvazia'
+  | 'anterior'
+  | 'percorre'
+  | 'desliga'
+  | 'atualizaCauda'
+  | 'libera';
+
+/**
+ * A lista dupla chega ao antecessor por `prev`, num acesso; a simples precisa
+ * varrer desde a cabeça. São dois algoritmos, não duas variações de um — por
+ * isso o pseudocódigo é escrito por inteiro em cada caso, e é essa diferença
+ * que justifica o O(1) contra o O(n) anunciados ao lado.
+ */
+function pseudoDeleteTail(variant: ListVariant): PseudocodigoRotulado<RotuloDeleteTail> {
+  if (variant === 'doubly') {
+    return pseudocodigo<RotuloDeleteTail>('deleteTail()', [
+      'deleteTail():',
+      ['testeVazia', '  se cauda = NULL então'],
+      ['vazia', '    erro: lista vazia'],
+      '  fim se',
+      ['guarda', '  removido ← cauda'],
+      ['anterior', '  cauda ← removido.prev      // O(1): há caminho de volta'],
+      '  se cauda ≠ NULL então',
+      ['desliga', '    cauda.next ← NULL'],
+      '  senão',
+      ['esvazia', '    cabeca ← NULL'],
+      '  fim se',
+      ['libera', '  libera removido'],
+      '  retorna removido.valor',
+    ]);
+  }
+
+  return pseudocodigo<RotuloDeleteTail>('deleteTail()', [
+    'deleteTail():',
+    ['testeVazia', '  se cauda = NULL então'],
+    ['vazia', '    erro: lista vazia'],
+    '  fim se',
+    ['guarda', '  removido ← cauda'],
+    '  se cabeca = cauda então',
+    ['esvazia', '    cabeca ← NULL'],
+    '    cauda ← NULL',
+    '    libera removido',
+    '    retorna removido.valor',
+    '  fim se',
+    '  atual ← cabeca',
+    ['percorre', '  enquanto atual.next ≠ cauda faça    // O(n)'],
+    '    atual ← atual.next',
+    '  fim enquanto',
+    ['desliga', '  atual.next ← NULL'],
+    ['atualizaCauda', '  cauda ← atual'],
+    ['libera', '  libera removido'],
+    '  retorna removido.valor',
+  ]);
+}
+
+type RotuloDeleteAt =
+  | 'valida'
+  | 'invalido'
+  | 'percorre'
+  | 'identifica'
+  | 'religa'
+  | 'religaPrev'
+  | 'libera';
+
+function pseudoDeleteAt(variant: ListVariant): PseudocodigoRotulado<RotuloDeleteAt> {
+  return pseudocodigo<RotuloDeleteAt>('deleteAt(i)', [
+    'deleteAt(i):',
+    ['valida', '  se lista vazia ou i inválido então'],
+    ['invalido', '    erro: índice inválido'],
+    '  fim se',
+    '  se i = 0 então',
+    '    deleteHead()',
+    '    retorna',
+    '  fim se',
+    '  atual ← cabeca',
+    '  k ← 0',
+    ['percorre', '  enquanto k < i - 1 faça'],
+    '    atual ← atual.next',
+    '    k ← k + 1',
+    '  fim enquanto',
+    ['identifica', '  removido ← atual.next'],
+    ['religa', '  atual.next ← removido.next'],
+    ...(variant === 'doubly'
+      ? ([
+          '  se removido.next ≠ NULL então',
+          ['religaPrev', '    removido.next.prev ← atual'],
+          '  fim se',
+        ] as const)
+      : []),
+    ['libera', '  libera removido'],
+  ]);
+}
+
+const SEARCH = pseudocodigo('search(valor)', [
   'search(valor):',
-  '  atual ← cabeca; i ← 0',
-  '  enquanto atual ≠ NULL faça',
-  '    se atual.valor = valor então retorna i',
-  '    atual ← atual.next; i ← i + 1',
-  '  retorna "não encontrado"',
+  ['inicializa', '  atual ← cabeca'],
+  '  i ← 0',
+  ['percorre', '  enquanto atual ≠ NULL faça'],
+  '    se atual.valor = valor então',
+  ['encontrou', '      retorna i'],
+  '    fim se',
+  ['avanca', '    atual ← atual.next'],
+  '    i ← i + 1',
+  '  fim enquanto',
+  ['naoEncontrou', '  retorna "não encontrado"'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -270,6 +403,7 @@ export function planInsertHead(state: LinkedListState, novo: NewNode): ListTrace
   const duplamente = isDoubly(state);
   const listaVazia = isEmpty(state);
   const cabecaAntiga = state.head;
+  const pseudo = pseudoInsertHead(state.variant);
 
   const result = insertHead(state, novo);
   // insertHead nunca falha: a lista ligada não tem capacidade máxima.
@@ -282,7 +416,7 @@ export function planInsertHead(state: LinkedListState, novo: NewNode): ListTrace
     description: `Um nó com o valor ${quote(novo.value)} é alocado. Numa lista ligada não existe limite de capacidade: cada nó é alocado individualmente, por isso não há estado de "lista cheia".`,
     snapshot: { state, floating: { item: node, phase: 'entering' } },
     highlights: [{ kind: 'floating', role: 'entering' }],
-    codeLine: 1,
+    codeLine: pseudo.em.aloca,
   });
 
   builder.add({
@@ -295,7 +429,7 @@ export function planInsertHead(state: LinkedListState, novo: NewNode): ListTrace
       { kind: 'node', id: node.id, role: 'entering' },
       { kind: 'link', from: node.id, direction: 'next', role: 'target' },
     ],
-    codeLine: 2,
+    codeLine: pseudo.em.ligaNext,
     counts: { moves: 1 },
   });
 
@@ -308,7 +442,7 @@ export function planInsertHead(state: LinkedListState, novo: NewNode): ListTrace
         { kind: 'node', id: cabecaAntiga, role: 'inspected' },
         { kind: 'link', from: cabecaAntiga, direction: 'prev', role: 'target' },
       ],
-      codeLine: 3,
+      codeLine: pseudo.em.ligaPrev,
       counts: { moves: 1 },
     });
   }
@@ -326,7 +460,7 @@ export function planInsertHead(state: LinkedListState, novo: NewNode): ListTrace
         ? ([{ kind: 'pointer', pointer: 'tail', role: 'anchor' }] as const)
         : []),
     ],
-    codeLine: duplamente ? 4 : 3,
+    codeLine: pseudo.em.atualizaCabeca,
     tone: 'success',
     counts: { moves: listaVazia ? 2 : 1 },
   });
@@ -336,7 +470,7 @@ export function planInsertHead(state: LinkedListState, novo: NewNode): ListTrace
     complexity: C_INSERT_HEAD,
     outcome: 'success',
     summary: `${quote(novo.value)} foi inserido como nova cabeça da lista.`,
-    pseudocode: pseudoInsertHead(state.variant),
+    pseudocode: pseudo.code,
   });
 }
 
@@ -350,6 +484,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
   const duplamente = isDoubly(state);
   const listaVazia = isEmpty(state);
   const caudaAntiga = state.tail;
+  const pseudo = pseudoInsertTail(state.variant);
 
   const result = insertTail(state, novo);
   if (!result.ok) throw new Error('insertTail não deveria falhar');
@@ -360,7 +495,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
     description: `Um nó com o valor ${quote(novo.value)} é alocado, com o ponteiro next em NULL — ele será o último da lista, e NULL é o que marca esse fim.`,
     snapshot: { state, floating: { item: node, phase: 'entering' } },
     highlights: [{ kind: 'floating', role: 'entering' }],
-    codeLine: 1,
+    codeLine: pseudo.em.aloca,
   });
 
   if (listaVazia) {
@@ -373,7 +508,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
         { kind: 'pointer', pointer: 'head', role: 'anchor' },
         { kind: 'pointer', pointer: 'tail', role: 'anchor' },
       ],
-      codeLine: 3,
+      codeLine: pseudo.em.primeiroNo,
       tone: 'success',
       counts: { moves: 2 },
     });
@@ -383,7 +518,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
       complexity: C_INSERT_TAIL,
       outcome: 'success',
       summary: `${quote(novo.value)} foi inserido numa lista vazia: virou cabeça e cauda.`,
-      pseudocode: pseudoInsertTail(state.variant),
+      pseudocode: pseudo.code,
     });
   }
 
@@ -400,7 +535,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
         : []),
       { kind: 'node', id: node.id, role: 'entering' },
     ],
-    codeLine: 4,
+    codeLine: pseudo.em.ligaNextCauda,
     counts: { moves: 1 },
   });
 
@@ -413,7 +548,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
         { kind: 'node', id: node.id, role: 'inspected' },
         { kind: 'link', from: node.id, direction: 'prev', role: 'target' },
       ],
-      codeLine: 5,
+      codeLine: pseudo.em.ligaPrev,
       counts: { moves: 1 },
     });
   }
@@ -426,7 +561,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
       { kind: 'pointer', pointer: 'tail', role: 'anchor' },
       { kind: 'node', id: node.id, role: 'anchor' },
     ],
-    codeLine: duplamente ? 6 : 5,
+    codeLine: pseudo.em.atualizaCauda,
     tone: 'success',
     counts: { moves: 1 },
   });
@@ -436,7 +571,7 @@ export function planInsertTail(state: LinkedListState, novo: NewNode): ListTrace
     complexity: C_INSERT_TAIL,
     outcome: 'success',
     summary: `${quote(novo.value)} foi inserido como nova cauda da lista.`,
-    pseudocode: pseudoInsertTail(state.variant),
+    pseudocode: pseudo.code,
   });
 }
 
@@ -452,10 +587,14 @@ export function planInsertAt(
   const label = `insertAt(${index}, ${novo.value})`;
   const pseudo = pseudoInsertAt(state.variant);
 
-  // Índice 0 é, por definição, uma inserção na cabeça.
+  // Índice 0 é, por definição, uma inserção na cabeça — e o próprio
+  // pseudocódigo de insertAt delega a ela nesse caso. Por isso a trilha
+  // reaproveitada mantém **o pseudocódigo de insertHead**: seus passos foram
+  // numerados contra aquelas linhas, e trocar o painel por outro algoritmo
+  // faria o destaque apontar para linhas que nada têm a ver com o passo.
   if (index === 0) {
     const trace = planInsertHead(state, novo);
-    return { ...trace, label, complexity: C_INSERT_AT, pseudocode: pseudo };
+    return { ...trace, label, complexity: C_INSERT_AT };
   }
 
   const builder = createListTrace();
@@ -466,7 +605,7 @@ export function planInsertAt(
     description: `A lista tem ${sizeOf(state)}, então os índices aceitos para inserção vão de 0 (antes da cabeça) até ${state.size} (depois da cauda). O índice pedido é ${index}.`,
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'head', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: pseudo.em.valida,
   });
 
   const result = insertAt(state, index, novo);
@@ -477,7 +616,7 @@ export function planInsertAt(
       description: `O índice ${index} não existe nesta lista: só é possível inserir entre as posições 0 e ${state.size}. A operação é cancelada e a lista permanece inalterada.`,
       snapshot: still(state),
       highlights: [],
-      codeLine: 1,
+      codeLine: pseudo.em.indiceInvalido,
       tone: 'error',
     });
 
@@ -486,7 +625,7 @@ export function planInsertAt(
       complexity: C_INSERT_AT,
       outcome: 'error',
       summary: `Índice ${index} inválido: a lista aceita inserções entre 0 e ${state.size}.`,
-      pseudocode: pseudo,
+      pseudocode: pseudo.code,
     });
   }
 
@@ -494,7 +633,7 @@ export function planInsertAt(
     builder,
     state,
     visited: result.visited,
-    codeLine: 4,
+    codeLine: pseudo.em.percorre,
     goal: `É atrás dele que o novo nó será inserido, para ocupar a posição ${index}.`,
   });
 
@@ -507,7 +646,7 @@ export function planInsertAt(
     description: `Com o nó anterior localizado, um nó com o valor ${quote(novo.value)} é alocado para entrar entre ${nodeLabel(state, anteriorId)} e ${nodeLabel(state, seguinteId)}.`,
     snapshot: { state, floating: { item: node, phase: 'entering' } },
     highlights: [{ kind: 'floating', role: 'entering' }],
-    codeLine: 5,
+    codeLine: pseudo.em.aloca,
   });
 
   builder.add({
@@ -518,7 +657,7 @@ export function planInsertAt(
       { kind: 'node', id: node.id, role: 'entering' },
       { kind: 'link', from: node.id, direction: 'next', role: 'target' },
     ],
-    codeLine: 6,
+    codeLine: pseudo.em.ligaNext,
     counts: { moves: 1 },
   });
 
@@ -533,7 +672,7 @@ export function planInsertAt(
           ? ([{ kind: 'link', from: seguinteId, direction: 'prev', role: 'target' }] as const)
           : []),
       ],
-      codeLine: 7,
+      codeLine: pseudo.em.ligaPrev,
       counts: { moves: seguinteId !== null ? 2 : 1 },
     });
   }
@@ -551,7 +690,7 @@ export function planInsertAt(
         : []),
       { kind: 'node', id: node.id, role: 'anchor' },
     ],
-    codeLine: duplamente ? 8 : 7,
+    codeLine: pseudo.em.ligaAnterior,
     tone: 'success',
     counts: { moves: 1 },
   });
@@ -561,7 +700,7 @@ export function planInsertAt(
     complexity: C_INSERT_AT,
     outcome: 'success',
     summary: `${quote(novo.value)} foi inserido na posição ${index}, após percorrer ${result.visited.length} ${result.visited.length === 1 ? 'nó' : 'nós'}.`,
-    pseudocode: pseudo,
+    pseudocode: pseudo.code,
   });
 }
 
@@ -581,7 +720,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
       'Antes de remover, confere-se o ponteiro de cabeça: numa lista vazia ele vale NULL e não há nó algum para remover.',
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'head', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: pseudo.em.testeVazia,
   });
 
   const result = deleteHead(state);
@@ -593,7 +732,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
         'A cabeça vale NULL: não há nós para remover. A operação é cancelada. Insira algo com insertHead() ou insertTail() antes de tentar novamente.',
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'head', role: 'target' }],
-      codeLine: 1,
+      codeLine: pseudo.em.vazia,
       tone: 'error',
     });
 
@@ -602,7 +741,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
       complexity: C_DELETE_HEAD,
       outcome: 'error',
       summary: 'A lista está vazia: não há cabeça para remover.',
-      pseudocode: pseudo,
+      pseudocode: pseudo.code,
     });
   }
 
@@ -614,7 +753,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
     description: `A cabeça aponta para o nó de valor ${quote(removido.value)}. Guarda-se uma referência a ele antes de mover o ponteiro — caso contrário o nó ficaria inalcançável e não poderia ser liberado.`,
     snapshot: still(state),
     highlights: [{ kind: 'node', id: removido.id, role: 'leaving' }],
-    codeLine: 2,
+    codeLine: pseudo.em.guarda,
     counts: { visits: 1 },
   });
 
@@ -629,7 +768,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
       { kind: 'pointer', pointer: 'head', role: 'anchor' },
       { kind: 'floating', role: 'leaving' },
     ],
-    codeLine: 3,
+    codeLine: pseudo.em.avancaCabeca,
     counts: { moves: novaCabeca === null ? 2 : 1 },
   });
 
@@ -642,7 +781,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
         { kind: 'node', id: novaCabeca, role: 'inspected' },
         { kind: 'link', from: novaCabeca, direction: 'prev', role: 'target' },
       ],
-      codeLine: 4,
+      codeLine: pseudo.em.zeraPrev,
       counts: { moves: 1 },
     });
   }
@@ -655,7 +794,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
         : `A memória do nó ${quote(removido.value)} é liberada. A lista agora tem ${sizeOf(result.state)}.`,
     snapshot: still(result.state),
     highlights: [{ kind: 'pointer', pointer: 'head', role: 'anchor' }],
-    codeLine: duplamente ? 6 : 5,
+    codeLine: pseudo.em.libera,
     tone: 'success',
   });
 
@@ -664,7 +803,7 @@ export function planDeleteHead(state: LinkedListState): ListTrace {
     complexity: C_DELETE_HEAD,
     outcome: 'success',
     summary: `${quote(removido.value)} foi removido da cabeça da lista.`,
-    pseudocode: pseudo,
+    pseudocode: pseudo.code,
   });
 }
 
@@ -685,7 +824,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
       'Antes de remover, confere-se o ponteiro de cauda: numa lista vazia ele vale NULL.',
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'tail', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: pseudo.em.testeVazia,
   });
 
   const result = deleteTail(state);
@@ -697,7 +836,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
         'A cauda vale NULL: não há nós para remover. A operação é cancelada e a lista permanece vazia.',
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'tail', role: 'target' }],
-      codeLine: 1,
+      codeLine: pseudo.em.vazia,
       tone: 'error',
     });
 
@@ -706,7 +845,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
       complexity: complexidade,
       outcome: 'error',
       summary: 'A lista está vazia: não há cauda para remover.',
-      pseudocode: pseudo,
+      pseudocode: pseudo.code,
     });
   }
 
@@ -718,7 +857,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
     description: `A cauda aponta para o nó de valor ${quote(removido.value)}, que é o último da lista (seu next é NULL).`,
     snapshot: still(state),
     highlights: [{ kind: 'node', id: removido.id, role: 'leaving' }],
-    codeLine: 2,
+    codeLine: pseudo.em.guarda,
     counts: { visits: 1 },
   });
 
@@ -732,7 +871,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
         { kind: 'pointer', pointer: 'head', role: 'anchor' },
         { kind: 'pointer', pointer: 'tail', role: 'anchor' },
       ],
-      codeLine: duplamente ? 4 : 5,
+      codeLine: pseudo.em.esvazia,
       tone: 'success',
       counts: { moves: 2 },
     });
@@ -742,7 +881,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
       complexity: complexidade,
       outcome: 'success',
       summary: `${quote(removido.value)} era o único nó: a lista ficou vazia.`,
-      pseudocode: pseudo,
+      pseudocode: pseudo.code,
     });
   }
 
@@ -761,7 +900,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
           ? ([{ kind: 'node', id: anteriorId, role: 'target' }] as const)
           : []),
       ],
-      codeLine: 3,
+      codeLine: pseudo.em.anterior,
       // Uma única visita, contra as n−1 do percurso da lista simples: é o
       // contraste que o contador torna visível.
       counts: { visits: 1 },
@@ -771,7 +910,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
       builder,
       state,
       visited: result.visited,
-      codeLine: 4,
+      codeLine: pseudo.em.percorre,
       goal: 'É ele quem aponta para a cauda, então será a nova cauda da lista.',
     });
   }
@@ -786,7 +925,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
         : []),
       { kind: 'floating', role: 'leaving' },
     ],
-    codeLine: duplamente ? 4 : 5,
+    codeLine: pseudo.em.desliga,
     counts: { moves: 1 },
   });
 
@@ -800,7 +939,9 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
         ? ([{ kind: 'node', id: anteriorId, role: 'anchor' }] as const)
         : []),
     ],
-    codeLine: 5,
+    // Na lista dupla a cauda já foi movida ao seguir o prev, e o que resta é
+    // liberar; na simples ela só é atualizada agora, depois do percurso.
+    codeLine: duplamente ? pseudo.em.libera : pseudo.em.atualizaCauda,
     tone: 'success',
     counts: { moves: 1 },
   });
@@ -812,7 +953,7 @@ export function planDeleteTail(state: LinkedListState): ListTrace {
     summary: duplamente
       ? `${quote(removido.value)} foi removido da cauda, alcançada em O(1) pelo ponteiro prev.`
       : `${quote(removido.value)} foi removido da cauda, após percorrer ${result.visited.length} ${result.visited.length === 1 ? 'nó' : 'nós'} para achar o antecessor.`,
-    pseudocode: pseudo,
+    pseudocode: pseudo.code,
   });
 }
 
@@ -824,10 +965,12 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
   const label = `deleteAt(${index})`;
   const pseudo = pseudoDeleteAt(state.variant);
 
-  // Índice 0 é, por definição, a remoção da cabeça.
+  // Índice 0 é, por definição, a remoção da cabeça. Como em insertAt, a trilha
+  // reaproveitada conserva o pseudocódigo de deleteHead, contra o qual seus
+  // passos foram numerados.
   if (index === 0 && !isEmpty(state)) {
     const trace = planDeleteHead(state);
-    return { ...trace, label, complexity: C_DELETE_AT, pseudocode: pseudo };
+    return { ...trace, label, complexity: C_DELETE_AT };
   }
 
   const builder = createListTrace();
@@ -840,7 +983,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
       : `A lista tem ${sizeOf(state)}, então os índices válidos para remoção vão de 0 a ${state.size - 1}. O índice pedido é ${index}.`,
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'head', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: pseudo.em.valida,
   });
 
   const result = deleteAt(state, index);
@@ -854,7 +997,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
         : `O índice ${index} não existe nesta lista: as posições válidas vão de 0 a ${state.size - 1}. A operação é cancelada e a lista permanece inalterada.`,
       snapshot: still(state),
       highlights: [],
-      codeLine: 1,
+      codeLine: pseudo.em.invalido,
       tone: 'error',
     });
 
@@ -865,7 +1008,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
       summary: vazia
         ? 'A lista está vazia: não há nó para remover.'
         : `Índice ${index} inválido: a lista tem posições de 0 a ${state.size - 1}.`,
-      pseudocode: pseudo,
+      pseudocode: pseudo.code,
     });
   }
 
@@ -873,7 +1016,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
     builder,
     state,
     visited: result.visited,
-    codeLine: 4,
+    codeLine: pseudo.em.percorre,
     goal: `É ele quem aponta para o nó da posição ${index}, que será removido.`,
   });
 
@@ -886,7 +1029,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
     description: `O next do nó anterior leva ao nó da posição ${index}, de valor ${quote(removido.value)}. É ele que sai da lista.`,
     snapshot: still(state),
     highlights: [{ kind: 'node', id: removido.id, role: 'leaving' }],
-    codeLine: 5,
+    codeLine: pseudo.em.identifica,
     counts: { visits: 1 },
   });
 
@@ -900,7 +1043,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
         : []),
       { kind: 'floating', role: 'leaving' },
     ],
-    codeLine: 6,
+    codeLine: pseudo.em.religa,
     counts: { moves: 1 },
   });
 
@@ -913,7 +1056,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
         { kind: 'node', id: seguinteId, role: 'inspected' },
         { kind: 'link', from: seguinteId, direction: 'prev', role: 'target' },
       ],
-      codeLine: 7,
+      codeLine: pseudo.em.religaPrev,
       counts: { moves: 1 },
     });
   }
@@ -923,7 +1066,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
     description: `A memória do nó ${quote(removido.value)} é liberada. A lista agora tem ${sizeOf(result.state)}.`,
     snapshot: still(result.state),
     highlights: anteriorId !== null ? [{ kind: 'node', id: anteriorId, role: 'anchor' }] : [],
-    codeLine: duplamente ? 8 : 7,
+    codeLine: pseudo.em.libera,
     tone: 'success',
   });
 
@@ -932,7 +1075,7 @@ export function planDeleteAt(state: LinkedListState, index: number): ListTrace {
     complexity: C_DELETE_AT,
     outcome: 'success',
     summary: `${quote(removido.value)} foi removido da posição ${index}, após percorrer ${result.visited.length} ${result.visited.length === 1 ? 'nó' : 'nós'}.`,
-    pseudocode: pseudo,
+    pseudocode: pseudo.code,
   });
 }
 
@@ -951,7 +1094,9 @@ export function planSearch(state: LinkedListState, value: string): ListTrace {
       description: `A cabeça vale NULL, então o percurso termina antes de começar: não há nó algum para comparar com ${quote(value)}.`,
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'head', role: 'target' }],
-      codeLine: 1,
+      // É a condição do laço que falha de imediato, e é ela que o aluno
+      // precisa ver destacada para entender por que nada é comparado.
+      codeLine: SEARCH.em.percorre,
       tone: 'error',
     });
 
@@ -960,7 +1105,7 @@ export function planSearch(state: LinkedListState, value: string): ListTrace {
       complexity: C_SEARCH,
       outcome: 'error',
       summary: `A lista está vazia: ${quote(value)} não foi encontrado.`,
-      pseudocode: PSEUDO_SEARCH,
+      pseudocode: SEARCH.code,
     });
   }
 
@@ -969,7 +1114,7 @@ export function planSearch(state: LinkedListState, value: string): ListTrace {
     description: `A busca numa lista ligada só pode começar pela cabeça: não há acesso indexado. Um ponteiro auxiliar é posicionado nela e a lista será percorrida nó a nó até encontrar ${quote(value)} ou chegar a NULL.`,
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'head', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: SEARCH.em.inicializa,
   });
 
   const result = search(state, value);
@@ -1003,7 +1148,7 @@ export function planSearch(state: LinkedListState, value: string): ListTrace {
       // única operação do simulador que compara chaves, e a soma é exatamente
       // o n da complexidade O(n).
       counts: { visits: 1, comparisons: 1 },
-      codeLine: encontrado ? 3 : 4,
+      codeLine: encontrado ? SEARCH.em.encontrou : SEARCH.em.avanca,
       tone: encontrado ? 'success' : 'info',
     });
   });
@@ -1016,7 +1161,7 @@ export function planSearch(state: LinkedListState, value: string): ListTrace {
       highlights: state.tail !== null
         ? [{ kind: 'link', from: state.tail, direction: 'next', role: 'target' }]
         : [],
-      codeLine: 5,
+      codeLine: SEARCH.em.naoEncontrou,
       tone: 'error',
     });
 
@@ -1025,7 +1170,7 @@ export function planSearch(state: LinkedListState, value: string): ListTrace {
       complexity: C_SEARCH,
       outcome: 'error',
       summary: `${quote(value)} não encontrado: os ${total} ${total === 1 ? 'nó foi comparado' : 'nós foram comparados'} sem sucesso.`,
-      pseudocode: PSEUDO_SEARCH,
+      pseudocode: SEARCH.code,
     });
   }
 
@@ -1034,6 +1179,6 @@ export function planSearch(state: LinkedListState, value: string): ListTrace {
     complexity: C_SEARCH,
     outcome: 'success',
     summary: `${quote(value)} encontrado na posição ${result.foundIndex}, após comparar ${result.visited.length} ${result.visited.length === 1 ? 'nó' : 'nós'}.`,
-    pseudocode: PSEUDO_SEARCH,
+    pseudocode: SEARCH.code,
   });
 }

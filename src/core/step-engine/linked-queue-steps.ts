@@ -22,9 +22,14 @@ import {
   rearNode,
 } from '../data-structures/linked-queue';
 import type { NewNode } from '../data-structures/linked-list';
-import type { NonEmptyArray, Pseudocode } from '../../types/step';
 import type { ListHighlight, ListSnapshot, ListTrace } from '../../types/structures';
-import { type TraceBuilder, complexity, createTraceBuilder, quote } from './trace-builder';
+import {
+  type TraceBuilder,
+  complexity,
+  createTraceBuilder,
+  pseudocodigo,
+  quote,
+} from './trace-builder';
 
 // ---------------------------------------------------------------------------
 // Auxiliares
@@ -40,12 +45,6 @@ function still(state: LinkedQueueState): ListSnapshot {
 
 function sizeOf(state: LinkedQueueState): string {
   return `${state.size} ${state.size === 1 ? 'nó' : 'nós'}`;
-}
-
-function pseudocode(title: string, lines: readonly string[]): Pseudocode {
-  const [first, ...rest] = lines;
-  const safe: NonEmptyArray<string> = first === undefined ? [title] : [first, ...rest];
-  return { title, lines: safe };
 }
 
 // ---------------------------------------------------------------------------
@@ -72,35 +71,46 @@ const C_TESTE = complexity(
   'Basta comparar o ponteiro de início com NULL. Diferente da fila circular, não é preciso um contador para desempatar vazia de cheia — a fila encadeada não tem estado de cheia.',
 );
 
-const PSEUDO_ENQUEUE = pseudocode('enqueue(valor)', [
-  'enqueue(v):',
-  '  novo ← aloca_nó(v)',
-  '  novo.next ← NULL',
-  '  se início = NULL então',
-  '    início ← novo',
+const ENQUEUE = pseudocodigo('enqueue(valor)', [
+  'enqueue(valor):',
+  ['aloca', '  novo ← aloca nó com valor'],
+  ['terminaNext', '  novo.next ← NULL'],
+  ['testeVazia', '  se inicio = NULL então'],
+  ['primeiroNo', '    inicio ← novo'],
   '  senão',
-  '    fim.next ← novo',
-  '  fim ← novo',
+  ['ligaFim', '    fim.next ← novo'],
+  '  fim se',
+  ['avancaFim', '  fim ← novo'],
+  ['incrementaTamanho', '  tamanho ← tamanho + 1'],
 ]);
 
-const PSEUDO_DEQUEUE = pseudocode('dequeue()', [
+const DEQUEUE = pseudocodigo('dequeue()', [
   'dequeue():',
-  '  se início = NULL então',
-  '    erro "underflow"',
-  '  removido ← início',
-  '  início ← início.next',
-  '  se início = NULL então fim ← NULL',
-  '  libera(removido)',
+  ['testeVazia', '  se inicio = NULL então'],
+  ['underflow', '    erro: underflow — a fila está vazia'],
+  '  fim se',
+  ['guarda', '  removido ← inicio'],
+  ['avancaInicio', '  inicio ← inicio.next'],
+  '  se inicio = NULL então',
+  ['zeraFim', '    fim ← NULL'],
+  '  fim se',
+  ['libera', '  libera removido'],
+  ['decrementaTamanho', '  tamanho ← tamanho - 1'],
+  ['retorna', '  retorna removido.valor'],
 ]);
 
-const PSEUDO_PEEK = pseudocode('peek()', [
+const PEEK = pseudocodigo('peek()', [
   'peek():',
-  '  se início = NULL então',
-  '    erro "fila vazia"',
-  '  devolve início.valor',
+  ['testeVazia', '  se inicio = NULL então'],
+  ['vazia', '    erro: a fila está vazia'],
+  '  fim se',
+  ['retorna', '  retorna inicio.valor       // não move os ponteiros'],
 ]);
 
-const PSEUDO_IS_EMPTY = pseudocode('isEmpty()', ['isEmpty():', '  devolve início = NULL']);
+const IS_EMPTY = pseudocodigo('isEmpty()', [
+  'isEmpty():',
+  ['retorna', '  retorna (inicio = NULL)'],
+]);
 
 // ---------------------------------------------------------------------------
 // enqueue
@@ -123,7 +133,7 @@ export function planEnqueue(state: LinkedQueueState, novo: NewNode): ListTrace {
     description: `Um nó com o valor ${quote(novo.value)} é alocado, com o next em NULL — ele será o último da fila, e NULL é o que marca esse fim. Não há verificação de espaço: a fila encadeada não tem capacidade máxima.`,
     snapshot: { state, floating: { item: node, phase: 'entering' } },
     highlights: [{ kind: 'floating', role: 'entering' }],
-    codeLine: 1,
+    codeLine: ENQUEUE.em.aloca,
   });
 
   if (filaVazia) {
@@ -137,7 +147,7 @@ export function planEnqueue(state: LinkedQueueState, novo: NewNode): ListTrace {
         { kind: 'pointer', pointer: 'head', role: 'anchor' },
         { kind: 'pointer', pointer: 'tail', role: 'anchor' },
       ],
-      codeLine: 4,
+      codeLine: ENQUEUE.em.primeiroNo,
       tone: 'success',
       counts: { moves: 2 },
     });
@@ -147,7 +157,7 @@ export function planEnqueue(state: LinkedQueueState, novo: NewNode): ListTrace {
       complexity: C_ENQUEUE,
       outcome: 'success',
       summary: `${quote(novo.value)} entrou numa fila vazia: virou início e fim.`,
-      pseudocode: PSEUDO_ENQUEUE,
+      pseudocode: ENQUEUE.code,
     });
   }
 
@@ -164,7 +174,7 @@ export function planEnqueue(state: LinkedQueueState, novo: NewNode): ListTrace {
         : []),
       { kind: 'node', id: node.id, role: 'entering' },
     ],
-    codeLine: 6,
+    codeLine: ENQUEUE.em.ligaFim,
     counts: { visits: 1, moves: 1 },
   });
 
@@ -176,7 +186,7 @@ export function planEnqueue(state: LinkedQueueState, novo: NewNode): ListTrace {
       { kind: 'pointer', pointer: 'tail', role: 'anchor' },
       { kind: 'node', id: node.id, role: 'anchor' },
     ],
-    codeLine: 7,
+    codeLine: ENQUEUE.em.avancaFim,
     tone: 'success',
     counts: { moves: 1 },
   });
@@ -186,7 +196,7 @@ export function planEnqueue(state: LinkedQueueState, novo: NewNode): ListTrace {
     complexity: C_ENQUEUE,
     outcome: 'success',
     summary: `${quote(novo.value)} entrou no fim da fila, alcançado em O(1) pelo ponteiro de fim.`,
-    pseudocode: PSEUDO_ENQUEUE,
+    pseudocode: ENQUEUE.code,
   });
 }
 
@@ -204,7 +214,7 @@ export function planDequeue(state: LinkedQueueState): ListTrace {
       'Antes de remover, confere-se o ponteiro de início: numa fila encadeada vazia ele vale NULL. Não é preciso contador algum — na fila circular ele existia só para desempatar vazia de cheia.',
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'head', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: DEQUEUE.em.testeVazia,
   });
 
   const result = dequeue(state);
@@ -216,7 +226,7 @@ export function planDequeue(state: LinkedQueueState): ListTrace {
         'O início vale NULL: não há ninguém na fila para ser atendido. A operação é cancelada. Enfileire algo com enqueue() antes de tentar novamente.',
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'head', role: 'target' }],
-      codeLine: 2,
+      codeLine: DEQUEUE.em.underflow,
       tone: 'error',
     });
 
@@ -225,7 +235,7 @@ export function planDequeue(state: LinkedQueueState): ListTrace {
       complexity: C_DEQUEUE,
       outcome: 'error',
       summary: 'Underflow: não há elementos para desenfileirar.',
-      pseudocode: PSEUDO_DEQUEUE,
+      pseudocode: DEQUEUE.code,
     });
   }
 
@@ -237,7 +247,7 @@ export function planDequeue(state: LinkedQueueState): ListTrace {
     description: `O início aponta para ${quote(removido.value)}, o primeiro que entrou e, por isso, o primeiro a sair. Guarda-se a referência antes de mover o ponteiro, para poder liberar a memória depois.`,
     snapshot: still(state),
     highlights: [{ kind: 'node', id: removido.id, role: 'leaving' }],
-    codeLine: 3,
+    codeLine: DEQUEUE.em.guarda,
     counts: { visits: 1 },
   });
 
@@ -252,7 +262,9 @@ export function planDequeue(state: LinkedQueueState): ListTrace {
       { kind: 'pointer', pointer: 'head', role: 'anchor' },
       { kind: 'floating', role: 'leaving' },
     ],
-    codeLine: novoInicio === null ? 5 : 4,
+    // Quando a fila esvazia, o passo trata do zeramento do fim — que é a linha
+    // que o aluno precisa ver destacada, não a do avanço do início.
+    codeLine: novoInicio === null ? DEQUEUE.em.zeraFim : DEQUEUE.em.avancaInicio,
     counts: { moves: novoInicio === null ? 2 : 1 },
   });
 
@@ -261,7 +273,7 @@ export function planDequeue(state: LinkedQueueState): ListTrace {
     description: `A memória do nó ${quote(removido.value)} é devolvida. A fila agora tem ${sizeOf(result.state)}. Na fila em vetor a posição continuaria existindo, à espera de ser reaproveitada quando o fim desse a volta; aqui o espaço volta para a memória.`,
     snapshot: still(result.state),
     highlights: [{ kind: 'pointer', pointer: 'head', role: 'anchor' }],
-    codeLine: 6,
+    codeLine: DEQUEUE.em.libera,
     tone: 'success',
   });
 
@@ -270,7 +282,7 @@ export function planDequeue(state: LinkedQueueState): ListTrace {
     complexity: C_DEQUEUE,
     outcome: 'success',
     summary: `${quote(removido.value)} saiu do início da fila e sua memória foi liberada.`,
-    pseudocode: PSEUDO_DEQUEUE,
+    pseudocode: DEQUEUE.code,
   });
 }
 
@@ -287,7 +299,7 @@ export function planPeek(state: LinkedQueueState): ListTrace {
     description: 'Para consultar quem será atendido, o ponteiro de início não pode ser NULL.',
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'head', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: PEEK.em.testeVazia,
   });
 
   const result = peek(state);
@@ -299,7 +311,7 @@ export function planPeek(state: LinkedQueueState): ListTrace {
         'O início vale NULL: não há ninguém para consultar. A operação é cancelada e nada é alterado.',
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'head', role: 'target' }],
-      codeLine: 2,
+      codeLine: PEEK.em.vazia,
       tone: 'error',
     });
 
@@ -308,7 +320,7 @@ export function planPeek(state: LinkedQueueState): ListTrace {
       complexity: C_PEEK,
       outcome: 'error',
       summary: 'A fila está vazia, não há elemento no início para consultar.',
-      pseudocode: PSEUDO_PEEK,
+      pseudocode: PEEK.code,
     });
   }
 
@@ -317,7 +329,7 @@ export function planPeek(state: LinkedQueueState): ListTrace {
     description: `O início guarda ${quote(result.node.value)} — o próximo a ser atendido. A operação apenas lê: nenhum ponteiro se move e nenhum nó é liberado.`,
     snapshot: still(state),
     highlights: [{ kind: 'node', id: result.node.id, role: 'inspected' }],
-    codeLine: 3,
+    codeLine: PEEK.em.retorna,
     tone: 'success',
     counts: { visits: 1 },
   });
@@ -327,7 +339,7 @@ export function planPeek(state: LinkedQueueState): ListTrace {
     complexity: C_PEEK,
     outcome: 'success',
     summary: `O início da fila é ${quote(result.node.value)}. Nada foi removido.`,
-    pseudocode: PSEUDO_PEEK,
+    pseudocode: PEEK.code,
   });
 }
 
@@ -345,7 +357,7 @@ export function planIsEmpty(state: LinkedQueueState): ListTrace {
       'Uma única comparação de ponteiro responde à pergunta. Não há contador de elementos envolvido.',
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'head', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: IS_EMPTY.em.retorna,
   });
 
   builder.add({
@@ -355,7 +367,7 @@ export function planIsEmpty(state: LinkedQueueState): ListTrace {
       : `O início aponta para um nó, logo isEmpty() devolve falso. A fila guarda ${sizeOf(state)}. Não existe isFull() aqui: a fila encadeada não tem capacidade máxima.`,
     snapshot: still(state),
     highlights: vazia ? [] : [{ kind: 'node', id: state.head ?? '', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: IS_EMPTY.em.retorna,
     tone: 'success',
   });
 
@@ -364,6 +376,6 @@ export function planIsEmpty(state: LinkedQueueState): ListTrace {
     complexity: C_TESTE,
     outcome: 'success',
     summary: `isEmpty() = ${vazia ? 'verdadeiro' : 'falso'} (${sizeOf(state)}).`,
-    pseudocode: PSEUDO_IS_EMPTY,
+    pseudocode: IS_EMPTY.code,
   });
 }

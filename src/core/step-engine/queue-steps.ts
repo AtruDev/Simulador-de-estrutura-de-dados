@@ -17,62 +17,58 @@ import {
   peek,
   size,
 } from '../data-structures/queue';
-import type { Pseudocode } from '../../types/step';
 import type { QueueHighlight, QueueSnapshot, QueueTrace } from '../../types/structures';
-import { type TraceBuilder, complexity, createTraceBuilder, quote } from './trace-builder';
+import {
+  type TraceBuilder,
+  complexity,
+  createTraceBuilder,
+  pseudocodigo,
+  quote,
+} from './trace-builder';
 
 // ---------------------------------------------------------------------------
 // Pseudocódigo
 // ---------------------------------------------------------------------------
 
-const PSEUDO_ENQUEUE: Pseudocode = {
-  title: 'enqueue(valor)',
-  lines: [
-    'enqueue(valor):',
-    '  se total = capacidade então',
-    '    erro: overflow — a fila está cheia',
-    '  fim se',
-    '  itens[fim] ← valor',
-    '  fim ← (fim + 1) mod capacidade',
-    '  total ← total + 1',
-  ],
-};
+const ENQUEUE = pseudocodigo('enqueue(valor)', [
+  ['assinatura', 'enqueue(valor):'],
+  ['testeCheia', '  se total = capacidade então'],
+  ['overflow', '    erro: overflow — a fila está cheia'],
+  '  fim se',
+  ['grava', '  itens[fim] ← valor'],
+  ['avancaFim', '  fim ← (fim + 1) mod capacidade'],
+  ['incrementaTotal', '  total ← total + 1'],
+]);
 
-const PSEUDO_DEQUEUE: Pseudocode = {
-  title: 'dequeue()',
-  lines: [
-    'dequeue():',
-    '  se total = 0 então',
-    '    erro: underflow — a fila está vazia',
-    '  fim se',
-    '  valor ← itens[inicio]',
-    '  itens[inicio] ← vazio',
-    '  inicio ← (inicio + 1) mod capacidade',
-    '  total ← total - 1',
-    '  retorna valor',
-  ],
-};
+const DEQUEUE = pseudocodigo('dequeue()', [
+  'dequeue():',
+  ['testeVazia', '  se total = 0 então'],
+  ['underflow', '    erro: underflow — a fila está vazia'],
+  '  fim se',
+  ['le', '  valor ← itens[inicio]'],
+  ['libera', '  itens[inicio] ← vazio'],
+  ['avancaInicio', '  inicio ← (inicio + 1) mod capacidade'],
+  ['decrementaTotal', '  total ← total - 1'],
+  ['retorna', '  retorna valor'],
+]);
 
-const PSEUDO_PEEK: Pseudocode = {
-  title: 'peek()',
-  lines: [
-    'peek():',
-    '  se total = 0 então',
-    '    erro: a fila está vazia',
-    '  fim se',
-    '  retorna itens[inicio]   // não move os ponteiros',
-  ],
-};
+const PEEK = pseudocodigo('peek()', [
+  'peek():',
+  ['testeVazia', '  se total = 0 então'],
+  ['vazia', '    erro: a fila está vazia'],
+  '  fim se',
+  ['retorna', '  retorna itens[inicio]      // não move os ponteiros'],
+]);
 
-const PSEUDO_IS_EMPTY: Pseudocode = {
-  title: 'isEmpty()',
-  lines: ['isEmpty():', '  retorna (total = 0)'],
-};
+const IS_EMPTY = pseudocodigo('isEmpty()', [
+  'isEmpty():',
+  ['retorna', '  retorna (total = 0)'],
+]);
 
-const PSEUDO_IS_FULL: Pseudocode = {
-  title: 'isFull()',
-  lines: ['isFull():', '  retorna (total = capacidade)'],
-};
+const IS_FULL = pseudocodigo('isFull()', [
+  'isFull():',
+  ['retorna', '  retorna (total = capacidade)'],
+]);
 
 // ---------------------------------------------------------------------------
 // Complexidades
@@ -140,7 +136,7 @@ export function planEnqueue(state: QueueState, item: QueueItem): QueueTrace {
     description: `Um elemento com o valor ${quote(item.value)} é preparado para entrar na fila. Ele ainda não faz parte da estrutura.`,
     snapshot: { state, floating: { item, phase: 'entering' } },
     highlights: [{ kind: 'floating', role: 'entering' }],
-    codeLine: 0,
+    codeLine: ENQUEUE.em.assinatura,
   });
 
   builder.add({
@@ -148,7 +144,7 @@ export function planEnqueue(state: QueueState, item: QueueItem): QueueTrace {
     description: `A fila ocupa ${occupancy(state)}. Como início e fim podem coincidir tanto na fila vazia quanto na cheia, quem responde a essa pergunta é o contador de elementos: total = ${size(state)}.`,
     snapshot: { state, floating: { item, phase: 'entering' } },
     highlights: [{ kind: 'pointer', pointer: 'rear', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: ENQUEUE.em.testeCheia,
   });
 
   const result = enqueue(state, item);
@@ -159,7 +155,7 @@ export function planEnqueue(state: QueueState, item: QueueItem): QueueTrace {
       description: `Todas as ${cap} posições do array estão ocupadas (total = capacidade). O elemento ${quote(item.value)} é descartado e a fila permanece inalterada. Para abrir espaço é preciso remover elementos com dequeue().`,
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'rear', role: 'target' }],
-      codeLine: 2,
+      codeLine: ENQUEUE.em.overflow,
       tone: 'error',
     });
 
@@ -168,7 +164,7 @@ export function planEnqueue(state: QueueState, item: QueueItem): QueueTrace {
       complexity: C_ENQUEUE,
       outcome: 'error',
       summary: `Overflow: a fila já tinha ${cap} elementos, o valor ${quote(item.value)} não foi enfileirado.`,
-      pseudocode: PSEUDO_ENQUEUE,
+      pseudocode: ENQUEUE.code,
     });
   }
 
@@ -177,7 +173,7 @@ export function planEnqueue(state: QueueState, item: QueueItem): QueueTrace {
     description: `O ponteiro de fim marcava a posição ${result.index} como a próxima livre, e é ali que o valor ${quote(item.value)} é gravado. O elemento entra no fim da fila: só sairá depois de todos os que já estavam nela.`,
     snapshot: still(result.state),
     highlights: [{ kind: 'slot', index: result.index, role: 'entering' }],
-    codeLine: 4,
+    codeLine: ENQUEUE.em.grava,
     counts: { moves: 1 },
   });
 
@@ -189,7 +185,7 @@ export function planEnqueue(state: QueueState, item: QueueItem): QueueTrace {
       { kind: 'slot', index: result.index, role: 'anchor' },
       { kind: 'pointer', pointer: 'rear', role: 'anchor' },
     ],
-    codeLine: 5,
+    codeLine: ENQUEUE.em.avancaFim,
     tone: 'success',
   });
 
@@ -198,7 +194,7 @@ export function planEnqueue(state: QueueState, item: QueueItem): QueueTrace {
     complexity: C_ENQUEUE,
     outcome: 'success',
     summary: `${quote(item.value)} entrou no fim da fila (posição ${result.index} do array).`,
-    pseudocode: PSEUDO_ENQUEUE,
+    pseudocode: ENQUEUE.code,
   });
 }
 
@@ -216,7 +212,7 @@ export function planDequeue(state: QueueState): QueueTrace {
     description: `Antes de remover, confere-se o contador de elementos: total = ${size(state)}. Numa fila vazia não há início válido para consultar.`,
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'front', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: DEQUEUE.em.testeVazia,
   });
 
   const result = dequeue(state);
@@ -228,7 +224,7 @@ export function planDequeue(state: QueueState): QueueTrace {
         'O contador de elementos vale 0, ou seja, não há ninguém na fila para ser atendido. A operação é cancelada e a fila continua vazia. Enfileire algo com enqueue() antes de tentar novamente.',
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'front', role: 'target' }],
-      codeLine: 2,
+      codeLine: DEQUEUE.em.underflow,
       tone: 'error',
     });
 
@@ -237,7 +233,7 @@ export function planDequeue(state: QueueState): QueueTrace {
       complexity: C_DEQUEUE,
       outcome: 'error',
       summary: 'Underflow: não há elementos para desenfileirar.',
-      pseudocode: PSEUDO_DEQUEUE,
+      pseudocode: DEQUEUE.code,
     });
   }
 
@@ -248,16 +244,16 @@ export function planDequeue(state: QueueState): QueueTrace {
     description: `O ponteiro de início aponta para a posição ${result.index}, que guarda ${quote(removido.value)}. Numa fila é sempre esse elemento que sai — o primeiro que entrou é o primeiro a sair (FIFO).`,
     snapshot: still(state),
     highlights: [{ kind: 'slot', index: result.index, role: 'leaving' }],
-    codeLine: 4,
+    codeLine: DEQUEUE.em.le,
     counts: { visits: 1 },
   });
 
   builder.add({
     title: 'Libera a posição do início',
-    description: `${quote(removido.value)} deixa a fila e é devolvido a quem chamou dequeue(). A posição ${result.index} do array fica livre e poderá ser reaproveitada quando o fim der a volta.`,
+    description: `${quote(removido.value)} deixa a fila. A posição ${result.index} do array fica livre e poderá ser reaproveitada quando o fim der a volta.`,
     snapshot: { state: result.state, floating: { item: removido, phase: 'leaving' } },
     highlights: [{ kind: 'floating', role: 'leaving' }],
-    codeLine: 5,
+    codeLine: DEQUEUE.em.libera,
     counts: { moves: 1 },
   });
 
@@ -267,10 +263,10 @@ export function planDequeue(state: QueueState): QueueTrace {
 
   builder.add({
     title: 'Avança o ponteiro de início',
-    description: `${pointerMove('início', state.front, result.state.front, cap)} ${proximo} A fila agora ocupa ${occupancy(result.state)}.`,
+    description: `${pointerMove('início', state.front, result.state.front, cap)} ${proximo} A fila agora ocupa ${occupancy(result.state)}, e dequeue() devolve ${quote(removido.value)} a quem o chamou.`,
     snapshot: still(result.state),
     highlights: [{ kind: 'pointer', pointer: 'front', role: 'anchor' }],
-    codeLine: 6,
+    codeLine: DEQUEUE.em.avancaInicio,
     tone: 'success',
   });
 
@@ -279,7 +275,7 @@ export function planDequeue(state: QueueState): QueueTrace {
     complexity: C_DEQUEUE,
     outcome: 'success',
     summary: `${quote(removido.value)} saiu do início da fila.`,
-    pseudocode: PSEUDO_DEQUEUE,
+    pseudocode: DEQUEUE.code,
   });
 }
 
@@ -296,7 +292,7 @@ export function planPeek(state: QueueState): QueueTrace {
     description: `Para consultar a frente da fila é preciso que exista pelo menos um elemento: total = ${size(state)}.`,
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'front', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: PEEK.em.testeVazia,
   });
 
   const result = peek(state);
@@ -308,7 +304,7 @@ export function planPeek(state: QueueState): QueueTrace {
         'Não há elemento no início para consultar: a fila não contém ninguém. A operação é cancelada e nada é alterado.',
       snapshot: still(state),
       highlights: [{ kind: 'pointer', pointer: 'front', role: 'target' }],
-      codeLine: 2,
+      codeLine: PEEK.em.vazia,
       tone: 'error',
     });
 
@@ -317,7 +313,7 @@ export function planPeek(state: QueueState): QueueTrace {
       complexity: C_PEEK,
       outcome: 'error',
       summary: 'A fila está vazia, não há elemento no início para consultar.',
-      pseudocode: PSEUDO_PEEK,
+      pseudocode: PEEK.code,
     });
   }
 
@@ -326,7 +322,7 @@ export function planPeek(state: QueueState): QueueTrace {
     description: `O início aponta para a posição ${result.index}, que guarda ${quote(result.item.value)} — o próximo a ser atendido. A operação peek() apenas lê esse valor: nem o elemento nem os ponteiros mudam.`,
     snapshot: still(state),
     highlights: [{ kind: 'slot', index: result.index, role: 'inspected' }],
-    codeLine: 4,
+    codeLine: PEEK.em.retorna,
     tone: 'success',
     counts: { visits: 1 },
   });
@@ -336,7 +332,7 @@ export function planPeek(state: QueueState): QueueTrace {
     complexity: C_PEEK,
     outcome: 'success',
     summary: `O início da fila é ${quote(result.item.value)} (posição ${result.index} do array). Nada foi removido.`,
-    pseudocode: PSEUDO_PEEK,
+    pseudocode: PEEK.code,
   });
 }
 
@@ -356,7 +352,7 @@ export function planIsEmpty(state: QueueState): QueueTrace {
       { kind: 'pointer', pointer: 'front', role: 'inspected' },
       { kind: 'pointer', pointer: 'rear', role: 'inspected' },
     ],
-    codeLine: 1,
+    codeLine: IS_EMPTY.em.retorna,
   });
 
   builder.add({
@@ -366,7 +362,7 @@ export function planIsEmpty(state: QueueState): QueueTrace {
       : `O total vale ${size(state)}, logo isEmpty() devolve falso. A fila guarda ${occupancy(state)}.`,
     snapshot: still(state),
     highlights: vazia ? [] : [{ kind: 'slot', index: state.front, role: 'inspected' }],
-    codeLine: 1,
+    codeLine: IS_EMPTY.em.retorna,
     tone: 'success',
   });
 
@@ -375,7 +371,7 @@ export function planIsEmpty(state: QueueState): QueueTrace {
     complexity: C_TESTE,
     outcome: 'success',
     summary: `isEmpty() = ${vazia ? 'verdadeiro' : 'falso'} (${occupancy(state)}).`,
-    pseudocode: PSEUDO_IS_EMPTY,
+    pseudocode: IS_EMPTY.code,
   });
 }
 
@@ -389,7 +385,7 @@ export function planIsFull(state: QueueState): QueueTrace {
     description: `O teste de fila cheia também é imediato: compara-se o contador (${size(state)}) com a capacidade do array (${cap}).`,
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'rear', role: 'inspected' }],
-    codeLine: 1,
+    codeLine: IS_FULL.em.retorna,
   });
 
   builder.add({
@@ -399,7 +395,7 @@ export function planIsFull(state: QueueState): QueueTrace {
       : `Ainda ${cap - size(state) === 1 ? 'resta 1 posição livre' : `restam ${cap - size(state)} posições livres`}, logo isFull() devolve falso.`,
     snapshot: still(state),
     highlights: [{ kind: 'pointer', pointer: 'rear', role: cheia ? 'target' : 'inspected' }],
-    codeLine: 1,
+    codeLine: IS_FULL.em.retorna,
     tone: 'success',
   });
 
@@ -408,6 +404,6 @@ export function planIsFull(state: QueueState): QueueTrace {
     complexity: C_TESTE,
     outcome: 'success',
     summary: `isFull() = ${cheia ? 'verdadeiro' : 'falso'} (${occupancy(state)}).`,
-    pseudocode: PSEUDO_IS_FULL,
+    pseudocode: IS_FULL.code,
   });
 }

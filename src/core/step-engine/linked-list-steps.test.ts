@@ -261,6 +261,42 @@ describe('invariantes do motor de passos', () => {
     }
   });
 
+  /**
+   * O teste acima não basta sozinho: um rótulo inexistente produz `undefined`,
+   * que o construtor converte em `null` — e a verificação de limites apenas
+   * pula os passos nulos. O erro passaria batido, e o aluno veria um passo sem
+   * linha alguma destacada. Como todos os planejadores da lista apontam para
+   * alguma linha, exigir isso de todo passo fecha a brecha.
+   */
+  it('todo passo aponta para alguma linha do pseudocódigo', () => {
+    for (const trace of trilhas) {
+      for (const step of trace.steps) {
+        expect(
+          step.codeLine,
+          `passo "${step.title}" de ${trace.label} ficou sem linha`,
+        ).not.toBeNull();
+      }
+    }
+  });
+
+  /**
+   * As linhas apontadas devem existir no pseudocódigo **exibido**. Quando uma
+   * operação reaproveita a trilha de outra (insertAt(0) delega a insertHead),
+   * trocar o pseudocódigo do painel sem renumerar os passos faria o destaque
+   * cair em linhas de outro algoritmo — daí a checagem do título junto.
+   */
+  it('a trilha reaproveitada por insertAt(0) mantém o pseudocódigo que numerou seus passos', () => {
+    for (const variant of VARIANTES) {
+      const delegada = planInsertAt(listOf(['b'], variant), 0, novo('a'));
+      const direta = planInsertHead(listOf(['b'], variant), novo('a'));
+
+      expect(delegada.pseudocode.lines).toEqual(direta.pseudocode.lines);
+      expect(delegada.steps.map((s) => s.codeLine)).toEqual(
+        direta.steps.map((s) => s.codeLine),
+      );
+    }
+  });
+
   it('todo destaque de nó aponta para um nó existente no snapshot', () => {
     for (const trace of trilhas) {
       for (const step of trace.steps) {
