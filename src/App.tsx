@@ -42,6 +42,23 @@ function QueueTab() {
   );
 }
 
+/**
+ * Marca do projeto: dois nós ligados por uma seta. É o mesmo desenho do ícone da
+ * aba do navegador, para que a página se identifique igual nos dois lugares.
+ * Desenhada em SVG, e não importada como imagem, porque precisa ficar nítida em
+ * qualquer tamanho — inclusive projetada numa parede.
+ */
+function Marca() {
+  return (
+    <svg viewBox="0 0 32 32" className="h-7 w-7 shrink-0" aria-hidden="true">
+      <rect width="32" height="32" rx="7" fill="#0f172a" />
+      <rect x="5" y="13" width="7" height="7" rx="1.5" fill="#34d399" />
+      <rect x="20" y="13" width="7" height="7" rx="1.5" fill="#818cf8" />
+      <path d="M13 16.5h6" stroke="#94a3b8" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 const TABS: readonly StructureTab[] = [
   { id: 'pilha', label: 'Pilha', render: () => <StackTab /> },
   { id: 'fila', label: 'Fila', render: () => <QueueTab /> },
@@ -91,11 +108,14 @@ export default function App() {
         className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur"
         aria-label="Estruturas de dados"
       >
-        <div className="mx-auto flex max-w-[104rem] items-center gap-6 px-4 py-3">
-          <span className="text-sm font-bold tracking-tight text-slate-900">
-            Simulador de Estruturas de Dados
-            <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-500">
-              AED
+        <div className="mx-auto flex max-w-[104rem] flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2.5">
+          <span className="flex items-center gap-2.5">
+            <Marca />
+            <span className="text-sm font-bold tracking-tight text-slate-900">
+              Simulador de Estruturas de Dados
+              <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-500">
+                AED
+              </span>
             </span>
           </span>
 

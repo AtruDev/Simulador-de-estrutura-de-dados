@@ -14,6 +14,24 @@
 
   body {
     @apply bg-slate-100 text-slate-900 antialiased;
+
+    /* Papel quadriculado: dá ao fundo a textura de caderno de rascunho, que é
+       onde essas estruturas costumam ser desenhadas à mão. O contraste é
+       propositalmente baixo — a grade orienta o olho entre os painéis sem
+       competir com o conteúdo. Feita em gradiente, e não em imagem, para
+       ladrilhar sem emenda e não custar nenhum byte de download. */
+    background-image:
+      linear-gradient(to right, --alpha(var(--color-slate-400) / 12%) 1px, transparent 1px),
+      linear-gradient(to bottom, --alpha(var(--color-slate-400) / 12%) 1px, transparent 1px),
+      linear-gradient(to right, --alpha(var(--color-slate-400) / 6%) 1px, transparent 1px),
+      linear-gradient(to bottom, --alpha(var(--color-slate-400) / 6%) 1px, transparent 1px);
+    background-size:
+      /* Grade maior, a cada 5 casas da menor. */
+      10rem 10rem,
+      10rem 10rem,
+      2rem 2rem,
+      2rem 2rem;
+    background-attachment: fixed;
   }
 
   /* Foco de teclado sempre visível — requisito de acessibilidade (seção 6). */
@@ -23,9 +41,14 @@
 }
 
 @layer utilities {
-  /* Superfície padrão dos painéis. */
+  /* Superfície padrão dos painéis. A sombra em duas camadas — um contato curto
+     e um halo largo — descola o painel branco da grade do fundo, que sem isso
+     "encosta" na borda e embaralha a leitura. */
   .painel {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+    @apply rounded-xl border border-slate-200/80 bg-white;
+    box-shadow:
+      0 1px 2px rgb(15 23 42 / 5%),
+      0 6px 16px -8px rgb(15 23 42 / 10%);
   }
 
   /* Título de seção dos painéis laterais. */

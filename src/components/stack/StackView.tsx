@@ -69,12 +69,14 @@ export function StackView({ snapshot, highlights, durationMs }: StackViewProps) 
 
       {/* Array da pilha. */}
       <div className="flex items-stretch gap-3">
-        {/* Coluna dos índices. */}
+        {/* Coluna dos índices. A largura acompanha a coluna de marcadores à
+            direita: sendo as duas iguais, é o array — e não o conjunto — que
+            fica centralizado no painel, que é o que o olho procura. */}
         <ol className="flex flex-col" aria-hidden="true">
           {posicoes.map((indice) => (
             <li
               key={indice}
-              className={`flex ${altura} w-7 items-center justify-end pr-1 font-mono text-xs text-slate-400`}
+              className={`flex ${altura} w-24 items-center justify-end pr-1 font-mono text-xs text-slate-400`}
             >
               {indice}
             </li>
@@ -124,7 +126,7 @@ export function StackView({ snapshot, highlights, durationMs }: StackViewProps) 
         </ol>
 
         {/* Coluna dos marcadores (topo e base). */}
-        <div className="relative w-28">
+        <div className="relative w-24">
           {posicoes.map((indice) => {
             const eTopo = indice === indiceTopo;
             const eBase = indice === 0 && state.items.length > 0;

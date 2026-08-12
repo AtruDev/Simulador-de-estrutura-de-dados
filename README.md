@@ -1,3 +1,5 @@
+![Simulador de Estruturas de Dados — pilha, fila e lista ligada](public/banner.jpg)
+
 # Simulador de Estruturas de Dados — AED
 
 **No ar em [simulador-de-estrutura-de-dados.vercel.app](https://simulador-de-estrutura-de-dados.vercel.app/)**
